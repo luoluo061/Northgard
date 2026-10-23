@@ -1,0 +1,22 @@
+# Private local observations and generated game definitions.
+captures/
+.local/
+research/static/
+research/runtime/reader_locator_cache.json
+submissions-review/
+dist/
+releases/
+internal-builds/
+__pycache__/
+*.py[cod]
+*.tmp
+*.log
+.env
+.env.*
+*.pak
+*.exe
+*.dll
+hlboot.dat
+research-raw*
+# Only reviewed contribution bundles belong under data/submissions/.
+!data/submissions/

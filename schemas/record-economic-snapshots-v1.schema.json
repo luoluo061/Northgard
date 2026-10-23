@@ -1,0 +1,1294 @@
+{
+  "$comment": "Generated from scripts/submission_contract.py; do not edit this copy alone.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action_events": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "time_interval": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_game_seconds": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "number"
+              },
+              "end_game_seconds": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "number"
+              },
+              "end_inclusive": {
+                "type": "boolean"
+              },
+              "paused_or_same_game_time": {
+                "type": "boolean"
+              },
+              "start_exclusive": {
+                "type": "boolean"
+              },
+              "start_game_seconds": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [],
+            "type": "object"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "maxItems": 100000,
+      "type": "array"
+    },
+    "capture_run_id": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    },
+    "capture_segment_id": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    },
+    "clan": {
+      "maxLength": 128,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+      "type": "string"
+    },
+    "economy": {
+      "additionalProperties": false,
+      "properties": {
+        "atomic": {
+          "type": "boolean"
+        },
+        "capture_run_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "capture_segment_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "game_time_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "hlboot_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "rate_unit": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        "read_guard_issues": {
+          "items": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "reason_codes": {
+          "items": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "resource_limits": {
+          "additionalProperties": false,
+          "properties": {
+            "Food": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Iron": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Lore": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Money": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Stone": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Wood": {
+              "additionalProperties": false,
+              "properties": {
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "resource_table_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "Food": {
+              "additionalProperties": false,
+              "properties": {
+                "age_game_seconds": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cached_at_game_time": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "consumption_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "food_base_cache_is_total": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_source": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "integration_order": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "native_net_field": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "net_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "raw_cached_production_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_components": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "base": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "silos": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "building_uid": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "capacity_added": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "is_upgraded": {
+                            "type": "boolean"
+                          },
+                          "zone_id": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 10000,
+                      "type": "array"
+                    }
+                  },
+                  "required": [],
+                  "type": "object"
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                },
+                "total_produced_counter": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Money": {
+              "additionalProperties": false,
+              "properties": {
+                "age_game_seconds": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cached_at_game_time": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "consumption_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "food_base_cache_is_total": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_source": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "integration_order": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "native_net_field": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "net_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "raw_cached_production_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_components": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "base": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "silos": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "building_uid": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "capacity_added": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "is_upgraded": {
+                            "type": "boolean"
+                          },
+                          "zone_id": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 10000,
+                      "type": "array"
+                    }
+                  },
+                  "required": [],
+                  "type": "object"
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                },
+                "total_produced_counter": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [],
+              "type": "object"
+            },
+            "Wood": {
+              "additionalProperties": false,
+              "properties": {
+                "age_game_seconds": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cached_at_game_time": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "consumption_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "food_base_cache_is_total": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gross_aggregate_source": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "integration_order": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "native_net_field": {
+                  "anyOf": [
+                    {
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "net_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "raw_cached_production_per_game_second": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stock_cap_components": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "base": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "silos": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "building_uid": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "capacity_added": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "is_upgraded": {
+                            "type": "boolean"
+                          },
+                          "zone_id": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 10000,
+                      "type": "array"
+                    }
+                  },
+                  "required": [],
+                  "type": "object"
+                },
+                "stock_cap_source": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_status": {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                "stock_cap_verified": {
+                  "type": "boolean"
+                },
+                "total_produced_counter": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [],
+          "type": "object"
+        },
+        "sample_span_game_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "schema_version": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "scope": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        "session_key": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        "status": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        "time_after": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "time_before": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "total_produced_semantics": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        "validation_status": {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "game_clock": {
+      "additionalProperties": false,
+      "properties": {
+        "month": {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "month_second": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "phase": {
+          "enum": [
+            "early",
+            "middle",
+            "late"
+          ]
+        },
+        "year": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "phase",
+        "month_second"
+      ],
+      "type": "object"
+    },
+    "game_time_seconds": {
+      "anyOf": [
+        {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "in_winter": {
+      "type": "boolean"
+    },
+    "own_success_events": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "enum": [
+              "self"
+            ]
+          },
+          "building_kind": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "index": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "kind": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "native_flag": {
+            "type": "boolean"
+          },
+          "position": {
+            "additionalProperties": false,
+            "properties": {
+              "height": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "number"
+              },
+              "width": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "number"
+              },
+              "x": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "number"
+              },
+              "y": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "number"
+              }
+            },
+            "required": [],
+            "type": "object"
+          },
+          "source": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "tech": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "tech_id": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "time": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "number"
+          },
+          "unit_kind": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "unit_or_upgrade_kind": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "zone_id": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "time"
+        ],
+        "type": "object"
+      },
+      "maxItems": 100000,
+      "type": "array"
+    },
+    "population": {
+      "anyOf": [
+        {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sample_span_game_seconds": {
+      "anyOf": [
+        {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sequence": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "session_key": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    },
+    "status": {
+      "maxLength": 128,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+      "type": "string"
+    },
+    "stocks": {
+      "additionalProperties": false,
+      "properties": {
+        "Food": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Iron": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Lore": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Money": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Stone": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Wood": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": -9007199254740991,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

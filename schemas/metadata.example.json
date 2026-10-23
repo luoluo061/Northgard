@@ -1,0 +1,13 @@
+{
+  "consent_to_share": false,
+  "data_source": "own_human_game",
+  "mode": "singleplayer",
+  "clan": null,
+  "difficulty": null,
+  "map": {"name": null, "seed": null, "size": null},
+  "experience": "unknown",
+  "goal": "请改写为此局想测试的人口安排与目标；不知道的环境保持 null。",
+  "result": "unknown",
+  "tags": ["单人验证", "人口分配"],
+  "feedback": []
+}

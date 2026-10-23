@@ -1,0 +1,105 @@
+name: Validate reviewed match contributions
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Data-only PR number to verify with the default branch validator'
+        required: true
+        type: string
+  pull_request:
+    paths: ['data/submissions/**', 'data/catalog.json', 'scripts/*submission*', 'scripts/build_catalog.py', 'schemas/**', '.github/workflows/validate-submissions.yml']
+  push:
+    paths: ['data/submissions/**', 'data/catalog.json', 'scripts/*submission*', 'scripts/build_catalog.py', 'schemas/**', '.github/workflows/validate-submissions.yml']
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Require trusted default branch for manual review
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          ACTUAL_REF: ${{ github.ref_name }}
+          DEFAULT_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          python3 - <<'PY'
+          import os
+          if os.environ['ACTUAL_REF'] != os.environ['DEFAULT_REF']:
+              raise SystemExit('Manual trusted review must run from the default branch.')
+          PY
+      - name: Read trusted validator from base revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Resolve and restrict a manual data-only PR
+        if: github.event_name == 'workflow_dispatch'
+        id: review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          DEFAULT_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          from pathlib import Path
+          number = os.environ['PR_NUMBER']
+          if not re.fullmatch(r'[1-9][0-9]{0,8}', number):
+              raise SystemExit('Invalid PR number.')
+          repo = os.environ['GITHUB_REPOSITORY']
+          def api(endpoint, *options):
+              result = subprocess.run(['gh', 'api', endpoint, *options], check=True, capture_output=True, text=True)
+              return json.loads(result.stdout)
+          pr = api(f'repos/{repo}/pulls/{number}')
+          if pr['base']['ref'] != os.environ['DEFAULT_REF']:
+              raise SystemExit('PR must target the trusted default branch.')
+          sha = pr['head']['sha']
+          if not re.fullmatch(r'[a-f0-9]{40,64}', sha):
+              raise SystemExit('Invalid PR head revision.')
+          pages = api(f'repos/{repo}/pulls/{number}/files?per_page=100', '--paginate', '--slurp')
+          files = [item for page in pages for item in page]
+          if len(files) != pr['changed_files']:
+              raise SystemExit('Cannot inspect the complete PR file list.')
+          import sys
+          sys.path.insert(0, 'trusted/scripts')
+          from submission_contract import FILES
+          file_pattern = re.compile(r'data/submissions/20[0-9]{2}/[a-f0-9-]{36}/(?:' + '|'.join(re.escape(x) for x in FILES) + r')')
+          names = [name for item in files for name in (item['filename'], item.get('previous_filename')) if name is not None]
+          if any(name != 'data/catalog.json' and not file_pattern.fullmatch(name) for name in names):
+              raise SystemExit('Data PR may not change scripts, schemas, workflows, documentation or other files.')
+          with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
+              output.write(f'ref=refs/pull/{number}/head\nhead_sha={sha}\n')
+          print('Reviewing data-only PR', number, 'at', sha)
+          PY
+      - name: Read candidate data only
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ steps.review.outputs.ref || github.sha }}
+          path: candidate
+          persist-credentials: false
+          submodules: false
+          lfs: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /data/submissions/
+            /data/catalog.json
+      - name: Ensure manually reviewed PR did not change during checkout
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          EXPECTED_SHA: ${{ steps.review.outputs.head_sha }}
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          actual = subprocess.run(['git', '-C', 'candidate', 'rev-parse', 'HEAD'], check=True, capture_output=True, text=True).stdout.strip()
+          if actual != os.environ['EXPECTED_SHA']:
+              raise SystemExit('PR changed during review; run the review again.')
+          PY
+      - name: Validate without importing candidate code
+        run: python3 trusted/scripts/validate_submission.py candidate/data/submissions --tree
+      - name: Check small catalog against validated data
+        run: python3 trusted/scripts/build_catalog.py --root candidate/data/submissions --output candidate/data/catalog.json --check

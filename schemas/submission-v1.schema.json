@@ -1,0 +1,366 @@
+{
+  "$comment": "Generated from scripts/submission_contract.py; do not edit this copy alone.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": {
+      "const": "northgard_own_player_submission"
+    },
+    "capture_id": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    },
+    "clock_policy": {
+      "const": "A800_March_epoch_60_game_seconds_per_month_thirds_are_report_buckets"
+    },
+    "collector_version": {
+      "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+      "type": "string"
+    },
+    "created_date": {
+      "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "expanded_bytes": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "path": {
+            "enum": [
+              "player-observations.ndjson.gz",
+              "economic-snapshots.ndjson.gz",
+              "actions.ndjson.gz",
+              "health.ndjson.gz",
+              "capture-manifest.json",
+              "SUMMARY.md"
+            ]
+          },
+          "record_count": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "size_bytes": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "size_bytes",
+          "sha256",
+          "expanded_bytes",
+          "record_count"
+        ],
+        "type": "object"
+      },
+      "maxItems": 6,
+      "type": "array"
+    },
+    "game_build": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "game_fingerprint": {
+      "additionalProperties": false,
+      "properties": {
+        "data_cdb_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hlboot_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "hlboot_sha256",
+        "data_cdb_sha256"
+      ],
+      "type": "object"
+    },
+    "match_id": {
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "clan": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consent_to_share": {
+          "const": true
+        },
+        "data_source": {
+          "enum": [
+            "own_human_game"
+          ]
+        },
+        "difficulty": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experience": {
+          "enum": [
+            "beginner",
+            "intermediate",
+            "experienced",
+            "expert",
+            "unknown"
+          ]
+        },
+        "feedback": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "confidence": {
+                "enum": [
+                  "observed",
+                  "suspected",
+                  "unverified"
+                ]
+              },
+              "counterexample": {
+                "maxLength": 1200,
+                "type": "string"
+              },
+              "game_time_seconds": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "number"
+              },
+              "hypothesis": {
+                "maxLength": 1200,
+                "type": "string"
+              },
+              "observation": {
+                "maxLength": 1200,
+                "type": "string"
+              },
+              "suggestion": {
+                "maxLength": 1200,
+                "type": "string"
+              },
+              "time_precision": {
+                "enum": [
+                  "exact_game_clock",
+                  "sampled_interval",
+                  "month_phase",
+                  "approximate"
+                ]
+              },
+              "unit_uids": {
+                "items": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 100,
+                "type": "array"
+              }
+            },
+            "required": [
+              "game_time_seconds",
+              "time_precision",
+              "observation",
+              "hypothesis",
+              "suggestion",
+              "counterexample",
+              "confidence"
+            ],
+            "type": "object"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "goal": {
+          "maxLength": 1200,
+          "type": "string"
+        },
+        "map": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "seed": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "size": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "seed",
+            "size"
+          ],
+          "type": "object"
+        },
+        "mode": {
+          "enum": [
+            "singleplayer",
+            "unknown"
+          ]
+        },
+        "result": {
+          "enum": [
+            "victory",
+            "defeat",
+            "quit",
+            "incomplete",
+            "unknown"
+          ]
+        },
+        "tags": {
+          "items": {
+            "pattern": "^[A-Za-z0-9_\\-\\u4e00-\\u9fff]{1,40}$",
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        }
+      },
+      "required": [
+        "consent_to_share",
+        "data_source",
+        "mode",
+        "clan",
+        "difficulty",
+        "map",
+        "experience",
+        "goal",
+        "result",
+        "tags",
+        "feedback"
+      ],
+      "type": "object"
+    },
+    "mode_evidence": {
+      "enum": [
+        "native_singleplayer",
+        "contributor_declared_native_context_unavailable",
+        "unknown"
+      ]
+    },
+    "record_schema_version": {
+      "const": 1
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "own_player_core_whitelist_v1_no_opponent_or_raw_memory"
+    },
+    "source_session": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    },
+    "time_end_game_seconds": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "number"
+    },
+    "time_start_game_seconds": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "match_id",
+    "created_date",
+    "metadata",
+    "collector_version",
+    "game_build",
+    "game_fingerprint",
+    "mode_evidence",
+    "capture_id",
+    "source_session",
+    "time_start_game_seconds",
+    "time_end_game_seconds",
+    "clock_policy",
+    "scope",
+    "files",
+    "record_schema_version"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,43 @@
+{
+  "$comment": "Generated from scripts/submission_contract.py; do not edit this copy alone.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "collector_version": {
+      "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+      "type": "string"
+    },
+    "dropped_source_fields": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "excluded_files_policy": {
+      "const": "fixed_names_only_no_raw_no_latest_no_paths_no_opponents"
+    },
+    "projection": {
+      "const": "submission-core.v1"
+    },
+    "recording_state": {
+      "const": "stopped"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "source_collection_id": {
+      "maxLength": 24,
+      "pattern": "^[a-f0-9]{24}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "collector_version",
+    "recording_state",
+    "source_collection_id",
+    "projection",
+    "dropped_source_fields",
+    "excluded_files_policy"
+  ],
+  "type": "object"
+}

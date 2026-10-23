@@ -1,0 +1,50 @@
+name: 玩家经验与反例
+description: 把具体对局时刻、观察和建议连接起来，帮助改进人口收益模型。
+title: "[经验] 氏族 / A800年X月 / 决策"
+labels: ["player-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: "请先移除姓名、Steam ID、账号、安装路径与凭证。这里的经验是待检验观点。数据上传需另行明确同意。"
+  - type: input
+    id: match
+    attributes:
+      label: 对局 UUID 与游戏 / 采集器版本
+      description: "尚未贡献可写未知；不要填写本地文件路径。"
+    validations:
+      required: true
+  - type: input
+    id: clock
+    attributes:
+      label: 游戏历法时间与氏族
+      description: "例如 A801年9月·月中，Bear；有原生游戏秒或单位 UID 可补充。"
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: 观察
+      description: "实际看见的动作、岗位、资源、知识、住房、季节和目标；不确定处写未知。"
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: 推测
+      description: "你怎样解释这一现象？哪些加成或事件可能混在一起？"
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议与适用条件
+      description: "如果重玩会把几个人转去什么岗位、为了什么目标？"
+    validations:
+      required: true
+  - type: textarea
+    id: counterexample
+    attributes:
+      label: 反例或仍缺的证据
+      description: "哪些氏族、知识、进攻压力或库存情况会使你的建议失效？"
+    validations:
+      required: true

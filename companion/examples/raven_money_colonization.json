@@ -1,0 +1,35 @@
+{
+  "synthetic": true,
+  "notice": "纯合成乌鸦测试场景，用于验证费用可由Money支付的通用预算设计。成本、流速、时间不是游戏真实数值；不自动识别UI，不自动应用乌鸦规则，不表示真实氏族参数已校准。",
+  "assumptions": {
+    "rate_units": "per_game_second",
+    "clan_parameters_calibrated": true,
+    "calibration_scope": "synthetic_scenario_only",
+    "clan": "Raven",
+    "mode": "single_player"
+  },
+  "snapshot": {
+    "stocks": {"Food": 100, "Wood": 80, "Money": 40},
+    "net_rates": {"Food": -0.1, "Wood": 0.2, "Money": 0.05},
+    "available_workers": 2,
+    "season_boundary_seconds": 150
+  },
+  "goal": {"resource": "Food", "target": 115, "deadline_seconds": 120},
+  "reserve_floors": {"Food": 35, "Wood": 20, "Money": 10},
+  "actions": [
+    {
+      "id": "synthetic_money_cost_zone",
+      "label": "合成：以明确给出的金币费用殖民→建造→调入2人",
+      "discovered": true,
+      "adjacent": true,
+      "known_legal": true,
+      "required_workers": 2,
+      "upfront_costs": {"Money": 15},
+      "start_delay_seconds": 30,
+      "startup_costs": {"Wood": 30},
+      "startup_costs_at_seconds": 5,
+      "during_setup_rate_delta": {"Food": -0.1, "Wood": 0, "Money": 0},
+      "after_start_rate_delta": {"Food": 0.35, "Wood": 0, "Money": 0}
+    }
+  ]
+}

@@ -1,0 +1,340 @@
+"""Versioned, standard-library-only submission contract. No process or network APIs."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import re
+
+SCHEMA_VERSION = 1
+MAX_RECORD = 2 * 1024 * 1024
+MAX_EXPANDED = 512 * 1024 * 1024
+MAX_TOTAL_EXPANDED = 1024 * 1024 * 1024
+MAX_COMPRESSED = 20 * 1024 * 1024
+DATA_FILES = ('player-observations.ndjson.gz', 'economic-snapshots.ndjson.gz',
+              'actions.ndjson.gz', 'health.ndjson.gz')
+FILES = ('submission.json', 'capture-manifest.json', 'checksums.sha256', 'SUMMARY.md', *DATA_FILES)
+
+
+class SubmissionError(ValueError):
+    pass
+
+
+def loads(raw):
+    def pairs(items):
+        output = {}
+        for key, value in items:
+            if key in output:
+                raise SubmissionError('Duplicate JSON key')
+            output[key] = value
+        return output
+    try:
+        return json.loads(raw, object_pairs_hook=pairs,
+                          parse_constant=lambda _: (_ for _ in ()).throw(SubmissionError('Nonfinite JSON')))
+    except (UnicodeError, json.JSONDecodeError, RecursionError) as error:
+        raise SubmissionError('Invalid JSON record') from error
+
+
+def json_bytes(value):
+    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + '\n').encode('utf-8')
+
+
+def obj(properties, required=()):
+    return {'type': 'object', 'additionalProperties': False, 'properties': properties, 'required': list(required)}
+
+
+def arr(items, maximum=10000):
+    return {'type': 'array', 'items': items, 'maxItems': maximum}
+
+
+def nullable(schema):
+    return {'anyOf': [schema, {'type': 'null'}]}
+
+
+NUM = {'type': 'number', 'minimum': -(2**53)+1, 'maximum': 2**53-1}
+NONNEG = {'type': 'number', 'minimum': 0, 'maximum': 2**53-1}
+INT = {'type': 'integer', 'minimum': 0, 'maximum': 2**53-1}
+BOOL = {'type': 'boolean'}
+TOKEN = {'type': 'string', 'pattern': r'^[A-Za-z][A-Za-z0-9_.:-]{0,127}$', 'maxLength': 128}
+IDENTITY = {'type': 'string', 'pattern': r'^[a-f0-9]{24}$', 'maxLength': 24}
+TEXT = {'type': 'string', 'maxLength': 1200}
+SHA = {'type': 'string', 'pattern': r'^[a-f0-9]{64}$'}
+VERSION = {'type': 'string', 'pattern': r'^[A-Za-z0-9_.-]{1,64}$'}
+UUID = {'type': 'string', 'pattern': r'^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'}
+DATE = {'type': 'string', 'pattern': r'^20[0-9]{2}-[01][0-9]-[0-3][0-9]$'}
+POINT = obj({'x': NUM, 'y': NUM}, ('x','y'))
+REF = obj({'uid': nullable(INT), 'entity_scope': TOKEN, 'kind': nullable(TOKEN), 'zone_id': nullable(INT)})
+JOB = obj({'kind': TOKEN, 'args_status': TOKEN, 'args': arr(TOKEN, 0)}, ('kind',))
+UNIT = obj({'uid':INT,**{k: nullable(INT) for k in ('zone_id','target_zone_id')}, 'kind': TOKEN,
+            **{k: nullable(JOB) for k in ('assigned_job','cur_job')},
+            **{k: nullable(REF) for k in ('assign_to','previous_assign_to','going_to')},
+            **{k: BOOL for k in ('has_no_work','just_assigned','enabled','selected')},
+            'produce': nullable(TOKEN), 'hit_life': NUM, 'position': nullable(POINT)}, ('uid','kind'))
+BUILDING = obj({'uid': INT, 'zone_id': INT, 'kind': TOKEN,
+                **{k: nullable(TOKEN) for k in ('base_kind','real_kind','target_kind')},
+                **{k: BOOL for k in ('is_construction','wait_repair','marked_for_destroy','selected')},
+                **{k: nullable(NUM) for k in ('upgraded','construction_progress','hit_life')},
+                'assigned_unit_ids': arr(INT), 'position': nullable(POINT)}, ('uid','zone_id','kind'))
+RESOURCE_NAMES = ('Food','Wood','Money','Stone','Iron','Lore')
+STOCKS = obj({k: nullable(NUM) for k in RESOURCE_NAMES})
+CACHE = obj({**{k: nullable(NUM) for k in ('stock','cached_at_game_time','age_game_seconds',
+    'raw_cached_production_per_game_second','consumption_per_game_second','net_per_game_second',
+    'gross_aggregate_per_game_second','total_produced_counter','stock_cap')},
+    'stock_cap_verified': BOOL, 'stock_cap_source': TOKEN, 'stock_cap_status': TOKEN,
+    'integration_order': nullable(TOKEN), 'native_net_field': nullable(TOKEN),
+    'gross_aggregate_source': nullable(TOKEN), 'food_base_cache_is_total': nullable(BOOL)})
+ECONOMY = obj({'schema_version': INT, 'status': TOKEN, 'scope': TOKEN, 'source': TOKEN,
+    'hlboot_sha256': SHA, 'resource_table_fingerprint': SHA,
+    **{k: NONNEG for k in ('game_time_seconds','time_before','time_after','sample_span_game_seconds')},
+    **{k: IDENTITY for k in ('session_key','capture_run_id','capture_segment_id')},
+    'atomic': BOOL, 'rate_unit': TOKEN, 'validation_status': TOKEN,
+    'total_produced_semantics': TOKEN, 'read_guard_issues': arr(TOKEN,100),
+    'reason_codes': arr(TOKEN,100), 'resources': obj({k:CACHE for k in ('Food','Wood','Money')})})
+INTERVAL = obj({**{k: NONNEG for k in ('start_game_seconds','end_game_seconds','duration_game_seconds')},
+    **{k: BOOL for k in ('start_exclusive','end_inclusive','paused_or_same_game_time')}})
+CLOCK = obj({'year':INT,'month':{'type':'integer','minimum':1,'maximum':12},
+             'phase':{'enum':['early','middle','late']},'month_second':NONNEG}, ('year','month','phase','month_second'))
+OWN_EVENT = obj({'index':INT,'time':NONNEG,'kind':TOKEN,'actor':{'enum':['self']},'source':TOKEN,
+    'zone_id':INT,'native_flag':BOOL,'building_kind':TOKEN,'tech':TOKEN,'unit_kind':TOKEN,
+    'tech_id':TOKEN,'unit_or_upgrade_kind':TOKEN,
+    'position':obj({'x':NUM,'y':NUM,'width':NUM,'height':NUM})}, ('kind','time'))
+PAIR = lambda s: obj({'before':nullable(s),'after':nullable(s)})
+CHANGES = obj({**{k:PAIR(NUM) for k in ('population','population_cap','construction_progress','upgraded','zone_id')},
+    **{k:PAIR(TOKEN) for k in ('kind',)}, **{k:PAIR(BOOL) for k in ('in_winter','session_game_finished','has_no_work')},
+    **{k:PAIR(REF) for k in ('assign_to','going_to')}, **{k:PAIR(JOB) for k in ('assigned_job','cur_job')},
+    'target_zone_id':PAIR(INT), 'assigned_unit_ids':PAIR(arr(INT)),
+    'discovered_zone_ids':obj({'added':INT}), 'owned_techs':obj({'added':TOKEN})})
+ACTION_EVENT = obj({'kind':TOKEN,'event_id':TOKEN,'time_interval':INTERVAL,
+    'entity':obj({**UNIT['properties'],**BUILDING['properties']}), 'changes':CHANGES,
+    'source':TOKEN,'confidence':obj({'level':TOKEN}),'resulting_building':nullable(BUILDING)}, ('kind',))
+BASE = {'status':TOKEN,'sequence':INT,'game_time_seconds':nullable(NONNEG),'game_clock':CLOCK,
+    **{k: IDENTITY for k in ('session_key','capture_run_id','capture_segment_id')},
+    'sample_span_game_seconds':nullable(NONNEG),'clan':TOKEN}
+RECORD_SCHEMAS = {
+ 'player-observations.ndjson.gz':obj({**BASE,'schema_version':INT,'observation_type':TOKEN,'policy_version':TOKEN,
+    'scope':{'enum':['local_player_and_owned_zones']},'population':nullable(NONNEG),'population_cap':nullable(NONNEG),
+    'stocks':STOCKS,'in_winter':BOOL,'units':arr(UNIT),'buildings':arr(BUILDING),
+    'owned_zone_ids':arr(INT),'discovered_zone_ids':arr(INT),'economy':ECONOMY,'own_events':arr(OWN_EVENT,100000),
+    **{k:BOOL for k in ('session_game_finished','local_player_game_over','local_player_has_conceded')}}),
+ 'economic-snapshots.ndjson.gz':obj({**BASE,'population':nullable(NONNEG),'stocks':STOCKS,'in_winter':BOOL,
+    'economy':ECONOMY,'own_success_events':arr(OWN_EVENT,100000),
+    'action_events':arr(obj({'kind':TOKEN,'time_interval':INTERVAL}),100000)}),
+ 'actions.ndjson.gz':obj({**BASE,'record_kind':TOKEN,'reason':TOKEN,'segment':INT,'sample_index':INT,
+    'time_interval':INTERVAL,'events':arr(ACTION_EVENT,100000),'attribution':TOKEN,
+    'resource_changes':obj({k:obj({'before':NUM,'after':NUM,'delta':NUM,'net_observed_change':NUM,
+        'observed_net_rate_per_game_second':nullable(NUM)}) for k in RESOURCE_NAMES}),
+    'native_events_already_present':INT,'unit_count':INT,'building_count':INT,
+    'skipped_samples_since_previous_valid':INT}),
+ 'health.ndjson.gz':obj({**BASE,**{k:nullable(TOKEN) for k in ('economy_status','operations_status','map_status','feast_quote_status',
+        'labor_status','individual_rate_status','population_growth_status')},
+    'labor_unknown_fields':arr(TOKEN,256),'growth_unknown_fields':arr(TOKEN,256),
+    'food_capacity_verified':BOOL,'reason_code':TOKEN,'error_type':TOKEN,'observation_rejection_codes':arr(TOKEN,100)}),
+}
+
+# New 0.3 inputs remain separate from actual rates. This frozen field tree is
+# independently checked in CI, without importing any candidate collector code.
+NULL = {'type':'null'}
+COMMON_COMPONENT = {'schema_version':{'const':1},'status':TOKEN,'source':TOKEN,'scope':TOKEN,
+    'hlboot_sha256':SHA,'data_cdb_sha256':SHA,'local_player_entity_uid':INT,
+    **{k:NONNEG for k in ('game_time_seconds','time_before','time_after','sample_span_game_seconds')},
+    **{k:IDENTITY for k in ('session_key','capture_run_id','capture_segment_id')},
+    'atomic':{'const':False},'unknown_fields':arr(TOKEN,256),'reason_codes':arr(TOKEN,256)}
+EFFECTS = nullable(arr(obj({'kind':TOKEN,'raw_end_time':NUM},('kind','raw_end_time')),1024))
+ENTRIES = nullable(arr(obj({'id':TOKEN,'value':{'anyOf':[NUM,BOOL,NULL]}},('id','value')),1024))
+LABOR_INPUTS = obj({**{k:nullable(BOOL) for k in ('has_no_work','just_assigned','enabled')},
+    **{k:nullable(NUM) for k in ('hit_life','sick_counter','status_timer','flags')},
+    **{k:nullable(TOKEN) for k in ('produce','sick_reason','status','cur_job_kind','assigned_job')}})
+LABOR_UNIT = obj({'uid':INT,'kind':TOKEN,'zone_id':nullable(INT),'inputs':LABOR_INPUTS,'effects':EFFECTS,
+    'native_actual_rate':NULL,'native_settled_amount':NULL,'model_effective_rate':NULL,'can_produce':NULL,
+    'rate_status':{'const':'computed_getter_no_persistent_unit_cache'},
+    'can_produce_status':{'const':'getter_not_executed'},
+    'assignment':nullable(obj({'building_uid':INT,'zone_id':INT,'same_zone':BOOL},('building_uid','zone_id','same_zone'))),
+    'assignment_status':TOKEN,'configuration_candidates':nullable(arr(obj({'resource':TOKEN,
+        'configured_base_q':nullable(NUM),'converts_to':nullable(TOKEN),'building_kinds':arr(TOKEN,64),
+        'additional_requirements_present':BOOL,'requirement_status':{'const':'not_evaluated'},
+        'rate_semantics':{'const':'static_configuration_candidate_not_effective_rate'}},
+        ('resource','configured_base_q','converts_to','building_kinds','additional_requirements_present','requirement_status','rate_semantics')),64))},
+    ('uid','kind','native_actual_rate','native_settled_amount','model_effective_rate','can_produce','rate_status'))
+LABOR = obj({**COMMON_COMPONENT,'native_individual_rates_available':{'const':False},
+    'actual_settled_amounts_available':{'const':False},
+    'individual_rate_status':{'const':'computed_getter_no_persistent_unit_cache'},
+    'player_context':obj({'clan':nullable(TOKEN),
+        **{k:nullable(BOOL) for k in ('in_winter','overworking','special_tech_provider_present','owl_component_present')},
+        **{k:nullable(NUM) for k in ('happiness_cache','consumption_coefficient','last_feast_time','last_overwork_time')},
+        **{k:nullable(INT) for k in ('population_cache','fame_level')},
+        'researched_tech_entries':ENTRIES,'upgraded_unit_entries':ENTRIES,'effects':EFFECTS,
+        'modifier_coverage':{'const':'materialized_inputs_only_not_complete_effective_bonus'}}),
+    'units':arr(LABOR_UNIT),'zones':arr(obj({'zone_id':INT,'effects':EFFECTS,'flags':nullable(NUM)}),4096),
+    'buildings':arr(obj({'uid':INT,'kind':TOKEN,'zone_id':INT,'upgraded':nullable(INT),
+        **{k:nullable(NUM) for k in ('hit_life','state_progress','state_contains')},
+        **{k:nullable(BOOL) for k in ('extended','wait_repair','harbor_force_stop')},
+        'harbor_produce_choice':nullable(TOKEN),'effects':EFFECTS}))})
+GROWTH_NATIVE = obj({**{k:nullable(NONNEG) for k in ('resource_growth_progress','recruit_stack','low_housing_timer',
+    'low_happiness_timer','no_population_growth_time')},'current_happiness':nullable(NUM),
+    **{k:nullable(INT) for k in ('population_cache','population_cap_cache','reserve_population_cache')},
+    **{k:nullable(BOOL) for k in ('force_recruit','has_conceded','player_game_over','game_finished',
+        'debug_population_can_grow','growth_disabled_modifier')}})
+PROGRESS_INTERVAL = obj({'town_hall_uid':INT,'source':{'const':'observed_growth_progress_interval'},
+    **{k:NONNEG for k in ('start_game_seconds','end_game_seconds','elapsed_game_seconds','progress_before','progress_after','observed_progress_per_game_second')},
+    'observed_effective_bonus_estimate':nullable(NUM),'bonus_estimate_semantics':TOKEN,
+    'conditional_threshold_eta_game_seconds':nullable(NONNEG),'eta_semantics':TOKEN,
+    'inputs_observed_unchanged_at_endpoints':{'const':True},'within_interval_changes_excluded':{'const':False},
+    'unknown_fields':arr(TOKEN,100),**{k:IDENTITY for k in ('session_key','capture_run_id','capture_segment_id')}})
+PROGRESS_INTERVAL['required']=list(PROGRESS_INTERVAL['properties'])
+GROWTH = obj({**COMMON_COMPONENT,'policy_version':TOKEN,'clan':TOKEN,'native_inputs':GROWTH_NATIVE,
+    'town_halls':arr(obj({'uid':INT,'zone_id':INT,'growth_progress':nullable(NONNEG),'force_recruit':nullable(BOOL),
+        'recruit_stack':nullable(NONNEG),'enabled':nullable(BOOL),'progress_fraction_model':nullable(NONNEG)}),1000),
+    'bonus_inputs':obj({'normal_map_tech_presence':nullable(obj({k:BOOL for k in ('Recruit','EndlessTide','PlotThrone')})),
+        'special_tech_providers_present':nullable(BOOL),
+        **{k:nullable(INT) for k in ('active_meal_count','conquest_bonus_count','additional_rule_count')}}),
+    'growth_bonus':NULL,'growth_bonus_source':{'const':'not_a_stored_field_not_evaluated'},
+    'model':obj({'next_recruit_threshold':nullable(NONNEG),'threshold_source':nullable(TOKEN),
+        'population_input':nullable(NONNEG),'population_input_source':TOKEN,'population_cache_matches_parent':nullable(BOOL),
+        'observed_blocking_inputs':arr(TOKEN,100),'blocking_inputs_complete':{'const':False},
+        'formula_eta_game_seconds':NULL,'formula_eta_status':TOKEN}),
+    'observed_progress_intervals':arr(PROGRESS_INTERVAL,1000)})
+OBSERVED_WINDOW = obj({'previous_game_seconds':NONNEG,'observed_by_game_seconds':NONNEG,
+    'sample_interval_game_seconds':NONNEG,'lower_exclusive':BOOL})
+BRIEF = obj({'kind':TOKEN,'zone_id':nullable(INT),'assign_to':nullable(REF),'going_to':nullable(REF),
+    'assigned_job':nullable(TOKEN),'cur_job':nullable(TOKEN),'target_zone_id':nullable(INT),'produce':nullable(TOKEN),
+    'enabled':nullable(BOOL),'has_no_work':nullable(BOOL),'position':nullable(POINT)})
+TRANSITION = obj({'schema_version':{'const':1},'event_type':{'const':'labor_transition_milestone'},
+    'source':{'const':'own_unit_sampled_state_transition'},'transition_id':TOKEN,'unit_uid':INT,
+    'phase':{'enum':['assignment_changed_observed','assignment_cleared_observed','task_or_route_changed_observed',
+        'location_changed_observed','occupation_changed_observed','production_candidate_resumed_observed','tracking_incomplete']},
+    'reason_code':nullable(TOKEN),'unit_class_before':TOKEN,'unit_class_now':TOKEN,
+    'assignment_observed_window':OBSERVED_WINDOW,'milestone_observed_window':OBSERVED_WINDOW,
+    'elapsed_from_assignment_game_seconds_bounds':nullable(obj({'lower':NONNEG,'upper':NONNEG},('lower','upper'))),
+    'assignment_sample_index':INT,'milestone_sample_index':INT,'before':BRIEF,'now':BRIEF,
+    'actual_resource_production_confirmed':{'const':False},
+    'duration_semantics':{'const':'sample_bounded_assignment_to_observed_stage_not_pure_walking_time'},
+    'unknown_fields':arr(TOKEN,100),**{k:IDENTITY for k in ('session_key','capture_run_id','capture_segment_id')}})
+TRANSITION['required']=list(TRANSITION['properties'])
+
+# Previously verified colonization/building costs and discovered static cells
+# remain shareable; hidden dynamic entities are never part of these schemas.
+COST = arr(obj({'resource':TOKEN,'amount':NONNEG},('resource','amount')),64)
+FEAST = obj({**{k:nullable(BOOL) for k in ('instigator_is_self','team_leader_present','team_leader_is_self',
+    'has_relic_goat','has_relic_chalice','has_trial_faith')},
+    **{k:nullable(INT) for k in ('feast_count','free_feast','free_feast_count','living_legend_stacks')},
+    **{k:nullable(NUM) for k in ('last_feast','free_feast_time','goat_cost_reduction','hunt_cost_reduction','living_legend_cost_reduction')}})
+OPERATIONS = obj({**COMMON_COMPONENT,'complete_transaction_ledger':{'const':False},'feast':FEAST,
+    'colonizations':arr(obj({'zone_id':INT,'progress':nullable(NUM),'cost_reduction':nullable(NUM),
+        'started_by_self':nullable(BOOL),'paid_cost':nullable(COST),'extra_paid_cost':nullable(COST),
+        'paid_cost_record_status':TOKEN,'extra_paid_cost_record_status':TOKEN}),4096),
+    'building_costs':arr(obj({'uid':INT,'zone_id':INT,'kind':TOKEN,'was_free':nullable(BOOL),'cost':nullable(COST),'cost_record_status':TOKEN})),
+    'feast_quote':obj({'status':TOKEN,'source':TOKEN,'cost':COST,'formula_branch':TOKEN})})
+MAP = obj({**COMMON_COMPONENT,'policy_version':TOKEN,'visibility_policy':TOKEN,'adjacency_semantics':TOKEN,
+    'map_identity':obj({'map_instance_id':IDENTITY,'biome':TOKEN,
+        'seed':nullable(NUM),'seed_source':nullable(TOKEN),'generation_seed':nullable(NUM),'generation_seed_source':nullable(TOKEN)}),
+    'known_zones':arr(obj({'id':INT,'terrain_kind':{'enum':['Default','Water','Coast']},'position':POINT,
+        'floor':NUM,'has_lake':BOOL,'known_geometric_neighbor_ids':arr(INT)}))})
+CAP_COMPONENTS = obj({'base':NONNEG,'silos':arr(obj({'building_uid':INT,'zone_id':INT,'is_upgraded':BOOL,'capacity_added':NONNEG}))})
+CACHE['properties']['stock_cap_components']=CAP_COMPONENTS
+ECONOMY['properties']['resource_limits']=obj({k:obj({'stock_cap':nullable(NUM),'stock_cap_verified':BOOL,
+    'stock_cap_source':TOKEN,'stock_cap_status':TOKEN}) for k in RESOURCE_NAMES})
+RECORD_SCHEMAS['player-observations.ndjson.gz']['properties'].update({
+    'local_player_entity_uid':INT,'labor':LABOR,'population_growth':GROWTH,'operations':OPERATIONS,'map_observation':MAP})
+RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['game_context']=obj({
+    **{k:TOKEN for k in ('mode_kind','game_type_kind','mode_variant_kind','biome')},
+    'bifrost_data_present':BOOL,'editor_present':BOOL,'difficulty':NUM})
+RECORD_SCHEMAS['actions.ndjson.gz']['properties']['labor_transitions']=arr(TRANSITION,10000)
+
+METADATA = obj({'consent_to_share':{'const':True}, 'data_source':{'enum':['own_human_game']},
+    'mode':{'enum':['singleplayer','unknown']},'clan':nullable(TOKEN),
+    'difficulty':nullable(TOKEN), 'map':obj({'name':nullable(TOKEN),'seed':nullable({'type':'integer'}),'size':nullable(TOKEN)},('name','seed','size')),
+    'experience':{'enum':['beginner','intermediate','experienced','expert','unknown']},
+    'goal':TEXT,'result':{'enum':['victory','defeat','quit','incomplete','unknown']},
+    'tags':arr({'type':'string','pattern':r'^[A-Za-z0-9_\-\u4e00-\u9fff]{1,40}$'},20),
+    'feedback':arr(obj({'game_time_seconds':NONNEG,'observation':TEXT,'hypothesis':TEXT,'suggestion':TEXT,'counterexample':TEXT,
+                       'time_precision':{'enum':['exact_game_clock','sampled_interval','month_phase','approximate']},
+                       'confidence':{'enum':['observed','suspected','unverified']},'unit_uids':arr(INT,100)},
+                      ('game_time_seconds','time_precision','observation','hypothesis','suggestion','counterexample','confidence')),100)},
+    ('consent_to_share','data_source','mode','clan','difficulty','map','experience','goal','result','tags','feedback'))
+FILE_ENTRY = obj({'path':{'enum':list(DATA_FILES)+['capture-manifest.json','SUMMARY.md']},'size_bytes':INT,'sha256':SHA,
+                  'expanded_bytes':INT,'record_count':INT},('path','size_bytes','sha256','expanded_bytes','record_count'))
+SUBMISSION_SCHEMA = obj({'schema_version':{'const':1},'artifact_type':{'const':'northgard_own_player_submission'},
+    'match_id':UUID,'created_date':DATE,'metadata':METADATA,
+    'collector_version':VERSION,'game_build':nullable(VERSION),
+    'game_fingerprint':obj({'hlboot_sha256':nullable(SHA),'data_cdb_sha256':nullable(SHA)},('hlboot_sha256','data_cdb_sha256')),
+    'mode_evidence':{'enum':['native_singleplayer','contributor_declared_native_context_unavailable','unknown']},
+    'capture_id':IDENTITY,'source_session':IDENTITY,'time_start_game_seconds':NONNEG,'time_end_game_seconds':NONNEG,
+    'clock_policy':{'const':'A800_March_epoch_60_game_seconds_per_month_thirds_are_report_buckets'},
+    'scope':{'const':'own_player_core_whitelist_v1_no_opponent_or_raw_memory'},
+    'files':arr(FILE_ENTRY,6),'record_schema_version':{'const':1}},
+    ('schema_version','artifact_type','match_id','created_date','metadata','collector_version','game_build','game_fingerprint','mode_evidence',
+     'capture_id','source_session','time_start_game_seconds','time_end_game_seconds','clock_policy','scope','files','record_schema_version'))
+MANIFEST_SCHEMA = obj({'schema_version':{'const':1},'collector_version':VERSION,'recording_state':{'const':'stopped'},
+    'source_collection_id':IDENTITY,'projection':{'const':'submission-core.v1'},'dropped_source_fields':INT,
+    'excluded_files_policy':{'const':'fixed_names_only_no_raw_no_latest_no_paths_no_opponents'}},
+    ('schema_version','collector_version','recording_state','source_collection_id','projection','dropped_source_fields','excluded_files_policy'))
+
+
+def validate(value, schema, path='$', depth=0):
+    if depth > 48:
+        raise SubmissionError('Too deeply nested at ' + path)
+    if 'anyOf' in schema:
+        for choice in schema['anyOf']:
+            try:
+                validate(value, choice, path, depth+1)
+                return
+            except SubmissionError:
+                pass
+        raise SubmissionError('Unexpected nullable value at ' + path)
+    if 'const' in schema and (type(value) is not type(schema['const']) or value != schema['const']):
+        raise SubmissionError('Unexpected constant at ' + path)
+    if 'enum' in schema and value not in schema['enum']:
+        raise SubmissionError('Unexpected enum at ' + path)
+    kind = schema.get('type')
+    checks = {'object':lambda:type(value) is dict, 'array':lambda:type(value) is list,
+              'number':lambda:(type(value) is int and abs(value)<2**53) or (type(value) is float and math.isfinite(value)),
+              'integer':lambda:type(value) is int,'string':lambda:type(value) is str,
+              'boolean':lambda:type(value) is bool,'null':lambda:value is None}
+    if kind and not checks[kind]():
+        raise SubmissionError('Unexpected type at ' + path)
+    if kind == 'object':
+        if set(value) - set(schema['properties']):
+            raise SubmissionError('Unknown field at ' + path)
+        if set(schema.get('required',())) - set(value):
+            raise SubmissionError('Missing field at ' + path)
+        for key,item in value.items():
+            validate(item,schema['properties'][key],path+'.'+key,depth+1)
+    elif kind == 'array':
+        if len(value) > schema.get('maxItems',10000):
+            raise SubmissionError('Too many items at ' + path)
+        for index,item in enumerate(value):
+            validate(item,schema['items'],path+'['+str(index)+']',depth+1)
+    elif kind in ('number','integer'):
+        if value < schema.get('minimum',-float('inf')) or value > schema.get('maximum',float('inf')):
+            raise SubmissionError('Number out of range at ' + path)
+    elif kind == 'string':
+        if len(value) > schema.get('maxLength',10000) or ('pattern' in schema and not re.fullmatch(schema['pattern'],value)):
+            raise SubmissionError('Invalid string at ' + path)
+        # Free text remains manually reviewable; block common accidental private artifacts.
+        if re.search(r'(?i)([A-Z]:[\\/]|\\\\|(?:^|\s)/(?:home|Users)/|gh[pousr]_[A-Za-z0-9]|github_pat_|sk-[A-Za-z0-9]{12}|STEAM_[0-9]|\b7656119[0-9]{10}\b|-----BEGIN .*PRIVATE KEY|https?://[^\s]+@)', value):
+            raise SubmissionError('Possible local path/account/credential in ' + path)
+
+
+def project(value, schema, dropped=None):
+    """Only named fields survive; type-check every retained leaf afterwards."""
+    if dropped is None:
+        dropped = [0]
+    if 'anyOf' in schema:
+        return None if value is None else project(value,schema['anyOf'][0],dropped)
+    if schema.get('type') == 'object' and type(value) is dict:
+        dropped[0] += len(set(value)-set(schema['properties']))
+        return {k:project(v,schema['properties'][k],dropped) for k,v in value.items() if k in schema['properties']}
+    if schema.get('type') == 'array' and type(value) is list:
+        return [project(v,schema['items'],dropped) for v in value]
+    return value
+
+
+def clock(seconds):
+    months = math.floor(seconds/60)+2
+    second = seconds % 60
+    return {'year':800+months//12,'month':months%12+1,
+            'phase':'early' if second < 20 else 'middle' if second < 40 else 'late','month_second':second}
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()

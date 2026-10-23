@@ -1,0 +1,63 @@
+{
+  "synthetic": true,
+  "notice": "纯合成测试场景。以下成本、流速、时间和劳力均非 Northgard 或熊族真实数值。calibrated=true 只表示本合成场景参数已显式给出，并未校准真实游戏。",
+  "assumptions": {
+    "rate_units": "per_game_second",
+    "clan_parameters_calibrated": true,
+    "calibration_scope": "synthetic_scenario_only",
+    "clan": "Bear",
+    "mode": "single_player"
+  },
+  "snapshot": {
+    "stocks": {"Food": 100, "Wood": 80, "Money": 40},
+    "net_rates": {"Food": -0.1, "Wood": 0.2, "Money": 0.05},
+    "available_workers": 2,
+    "season_boundary_seconds": 150
+  },
+  "goal": {"resource": "Food", "target": 115, "deadline_seconds": 120},
+  "reserve_floors": {"Food": 35, "Wood": 20, "Money": 10},
+  "actions": [
+    {
+      "id": "food_zone",
+      "label": "合成：殖民食物地→施工→调入2人",
+      "discovered": true,
+      "adjacent": true,
+      "known_legal": true,
+      "required_workers": 2,
+      "upfront_costs": {"Food": 20},
+      "start_delay_seconds": 30,
+      "startup_costs": {"Wood": 30},
+      "startup_costs_at_seconds": 5,
+      "during_setup_rate_delta": {"Food": -0.1, "Wood": 0, "Money": 0},
+      "after_start_rate_delta": {"Food": 0.6, "Wood": 0, "Money": 0}
+    },
+    {
+      "id": "wood_zone",
+      "label": "合成：殖民木材地→施工→调入2人",
+      "discovered": true,
+      "adjacent": true,
+      "known_legal": true,
+      "required_workers": 2,
+      "upfront_costs": {"Food": 20},
+      "start_delay_seconds": 25,
+      "startup_costs": {"Wood": 20},
+      "startup_costs_at_seconds": 0,
+      "during_setup_rate_delta": {"Food": -0.1, "Wood": 0, "Money": 0},
+      "after_start_rate_delta": {"Food": -0.2, "Wood": 0.5, "Money": 0}
+    },
+    {
+      "id": "unknown_food_zone",
+      "label": "合成：产速尚未确认的食物地",
+      "discovered": true,
+      "adjacent": true,
+      "known_legal": true,
+      "required_workers": 1,
+      "upfront_costs": {"Food": 15},
+      "start_delay_seconds": 20,
+      "startup_costs": {"Wood": 20},
+      "startup_costs_at_seconds": 0,
+      "during_setup_rate_delta": {"Food": -0.1, "Wood": 0, "Money": 0},
+      "after_start_rate_delta": {"Food": null, "Wood": 0, "Money": 0}
+    }
+  ]
+}

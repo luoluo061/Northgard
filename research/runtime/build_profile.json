@@ -1,0 +1,16 @@
+{
+  "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+  "game_build": "25096976",
+  "window_version": "v4.3.29.43387",
+  "pointer_size": 8,
+  "hl_type_size": 32,
+  "types": {
+    "ent.Player": 713,
+    "ent.player.WorldComponent": 742,
+    "ent.player.ResourcesComponent": 764,
+    "Game": 803,
+    "GameState": 805,
+    "$Game": 2405
+  },
+  "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+}
