@@ -9,10 +9,15 @@ body:
   - type: input
     id: match
     attributes:
-      label: 对局 UUID 与游戏 / 采集器版本
-      description: "尚未贡献可写未知；不要填写本地文件路径。"
+      label: 贡献 UUID / 共享对局 UUID 与游戏 / 采集器版本
+      description: "注明是哪一种 UUID；尚未贡献可写未知。不要填写本地路径或账号。"
     validations:
       required: true
+  - type: input
+    id: mode
+    attributes:
+      label: 对局模式与本人席位
+      description: "例如 3v3、A2；A/B 是协作标签，不是账号或原生队伍编号。不确定写未知。"
   - type: input
     id: clock
     attributes:

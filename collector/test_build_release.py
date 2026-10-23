@@ -119,12 +119,23 @@ class ReleaseBuilderTests(unittest.TestCase):
             extracted = root / "unpacked"
             with zipfile.ZipFile(root / "fixture.zip") as archive:
                 archive.extractall(extracted)
-            result = subprocess.run([shutil.which("powershell.exe"), "-NoProfile", "-File",
-                str(extracted / "collector/Start-Collector.ps1"), "-Seconds", "0",
-                "-OutDir", str(root / "unused-output")], capture_output=True, text=True, timeout=20)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn('"fixture_only": true', result.stdout)
-            self.assertFalse((root / "unused-output").exists())
+            shared = '12345678-1234-4234-8234-123456789abc'
+            variants = ([], ['-SharedMatchId', shared, '-TeamLabel', 'A', '-PlayerSlot', '2', '-DeclaredFormat', '3v3'])
+            for flags in variants:
+                with self.subTest(flags=flags):
+                    result = subprocess.run([shutil.which("powershell.exe"), "-NoProfile", "-File",
+                        str(extracted / "collector/Start-Collector.ps1"), "-Seconds", "0",
+                        "-OutDir", str(root / "unused-output"), *flags], capture_output=True, text=True, timeout=20)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    fixture = next(json.loads(line) for line in result.stdout.splitlines() if line.startswith('{'))
+                    self.assertTrue(fixture['fixture_only'])
+                    if flags:
+                        for key, value in (('--shared-match-id', shared), ('--team-label', 'A'),
+                                           ('--player-slot', '2'), ('--declared-format', '3v3')):
+                            self.assertEqual(fixture['args'][fixture['args'].index(key)+1], value)
+                    else:
+                        self.assertNotIn('--shared-match-id', fixture['args'])
+                    self.assertFalse((root / "unused-output").exists())
 
 
 if __name__ == "__main__":

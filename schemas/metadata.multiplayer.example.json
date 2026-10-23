@@ -1,0 +1,14 @@
+{
+  "consent_to_share": false,
+  "data_source": "own_human_game",
+  "mode": "multiplayer",
+  "match_link": null,
+  "clan": null,
+  "difficulty": null,
+  "map": {"name": null, "seed": null, "size": null},
+  "experience": "unknown",
+  "goal": "请填写这一局3v3的人口安排、队伍分工与测试目标；match_link由共同约定的对局ID和本人自报位置填写，未知不猜。",
+  "result": "unknown",
+  "tags": ["多人实验", "3v3", "本人视角"],
+  "feedback": []
+}

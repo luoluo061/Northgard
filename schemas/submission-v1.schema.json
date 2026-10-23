@@ -115,6 +115,54 @@
       "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
       "type": "string"
     },
+    "match_link": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "declared_format": {
+              "enum": [
+                "3v3",
+                "unknown"
+              ]
+            },
+            "player_slot": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "shared_match_id": {
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
+              "type": "string"
+            },
+            "team_label": {
+              "enum": [
+                "A",
+                "B",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "shared_match_id",
+            "declared_format",
+            "team_label",
+            "player_slot"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "metadata": {
       "additionalProperties": false,
       "properties": {
@@ -272,9 +320,58 @@
           ],
           "type": "object"
         },
+        "match_link": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "declared_format": {
+                  "enum": [
+                    "3v3",
+                    "unknown"
+                  ]
+                },
+                "player_slot": {
+                  "anyOf": [
+                    {
+                      "maximum": 3,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "shared_match_id": {
+                  "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
+                  "type": "string"
+                },
+                "team_label": {
+                  "enum": [
+                    "A",
+                    "B",
+                    "unknown"
+                  ]
+                }
+              },
+              "required": [
+                "shared_match_id",
+                "declared_format",
+                "team_label",
+                "player_slot"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "mode": {
           "enum": [
             "singleplayer",
+            "multiplayer",
             "unknown"
           ]
         },
@@ -314,6 +411,7 @@
     "mode_evidence": {
       "enum": [
         "native_singleplayer",
+        "native_multiplayer",
         "contributor_declared_native_context_unavailable",
         "unknown"
       ]
@@ -341,6 +439,9 @@
       "maximum": 9007199254740991,
       "minimum": 0,
       "type": "number"
+    },
+    "validation_stage": {
+      "const": "experimental_multiplayer_unverified"
     }
   },
   "required": [

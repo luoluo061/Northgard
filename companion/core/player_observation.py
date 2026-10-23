@@ -20,12 +20,14 @@ try:
     from .map_projection import project_map
     from .labor_projection import project_labor
     from .growth_projection import project_growth
+    from .match_context_projection import project_match_context
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from operation_projection import project_operations
     from map_projection import project_map
     from labor_projection import project_labor
     from growth_projection import project_growth
+    from match_context_projection import project_match_context
 
 
 POLICY_VERSION = "player-observation.v1"
@@ -575,6 +577,8 @@ def project_player_observation(snapshot: Any, *, include_own_events: bool = Fals
         result['labor'] = project_labor(snapshot['labor'], snapshot)
     if 'population_growth' in snapshot:
         result['population_growth'] = project_growth(snapshot['population_growth'], snapshot)
+    if 'match_context' in snapshot:
+        result['match_context'] = project_match_context(snapshot['match_context'], snapshot)
     return result
 
 

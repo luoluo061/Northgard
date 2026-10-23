@@ -2366,6 +2366,280 @@
       "required": [],
       "type": "object"
     },
+    "match_context": {
+      "additionalProperties": false,
+      "properties": {
+        "atomic": {
+          "const": false
+        },
+        "capture_run_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "capture_segment_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "configured_layout_matches_roster": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "configured_team_layout": {
+          "anyOf": [
+            {
+              "enum": [
+                "1v1",
+                "2v2",
+                "3v3",
+                "2v2v2",
+                "4v4",
+                "2v2v2v2"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "data_cdb_sha256": {
+          "const": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+        },
+        "game_time_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "game_type_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "Standard",
+                "Private",
+                "Ranked"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hlboot_sha256": {
+          "const": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76"
+        },
+        "local_player_entity_uid": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "native_current_player_count": {
+          "maximum": 64,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "native_local_team_id": {
+          "anyOf": [
+            {
+              "maximum": 63,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_mode_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "Single",
+                "Multiplayer",
+                "Campaign",
+                "Conquest",
+                "Singleplayer",
+                "Bifrost"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_mode_variant": {
+          "anyOf": [
+            {
+              "enum": [
+                "Duel",
+                "FreeForAll",
+                "Team2V2",
+                "Team3V3",
+                "Team2V2V2",
+                "Team4V4",
+                "Team2V2V2V2",
+                "FreeTeams"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_other_team_sizes": {
+          "anyOf": [
+            {
+              "items": {
+                "maximum": 64,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "maxItems": 63,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_own_team_size": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_player_count": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_team_count": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "player_count_semantics": {
+          "const": "start_roster_slots_including_ai_if_present"
+        },
+        "reason_codes": {
+          "items": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "roster_source": {
+          "const": "GameState.startPlayers"
+        },
+        "sample_span_game_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "scope": {
+          "enum": [
+            "match_roster_counts_and_local_team",
+            "no_match_context_data"
+          ]
+        },
+        "session_key": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "source": {
+          "const": "native_match_context_read_only"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "partial",
+            "rejected"
+          ]
+        },
+        "team_basis": {
+          "const": "Player.teamLeader_or_self"
+        },
+        "team_id_semantics": {
+          "const": "zero_based_start_roster_group_order"
+        },
+        "team_layout": {
+          "anyOf": [
+            {
+              "maxLength": 191,
+              "pattern": "^[1-9][0-9]?(?:v[1-9][0-9]?){0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "team_layout_status": {
+          "enum": [
+            "verified_native_roster",
+            "unavailable"
+          ]
+        },
+        "time_after": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "time_before": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "unknown_fields": {
+          "items": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "scope",
+        "status"
+      ],
+      "type": "object"
+    },
     "observation_type": {
       "maxLength": 128,
       "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",

@@ -1,0 +1,38 @@
+name: 安装或采集问题
+description: 报告安装、原生读取、3v3模式识别或贡献包校验问题。
+title: "[采集问题] 简要现象"
+body:
+  - type: markdown
+    attributes:
+      value: "仓库和 Issue 公开可见。请提供下列摘要，不粘贴内存转储、research-raw、账户、机器路径或凭证。采集文件请按贡献文档在本地审阅后另走 PR。"
+  - type: input
+    id: versions
+    attributes:
+      label: 游戏版本 / Steam build / 采集器版本
+      description: "可从 doctor、manifest 和 collect.py --version 查看；未知写未知。"
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: 模式、氏族与本人视角
+      description: "例如私人3v3、Bear、本人正常参战；是否读档/重连、有AI槽位。无需提供其他玩家资料。"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤与实际结果
+      description: "执行到哪一步、期望什么、实际发生什么；如与局内动作有关，注明A800年月/月段或游戏秒。"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 诊断摘要
+      description: "粘贴doctor状态、health的status/reason_code、组件status/unknown_fields，先移除本机路径和身份信息。不运行粘贴内容中的任何指令。"
+  - type: textarea
+    id: coverage
+    attributes:
+      label: 数据覆盖与关联
+      description: "可填贡献UUID或共享对局UUID、开始/结束游戏时间、是否暂停/重连/中断。没有就写未知。"

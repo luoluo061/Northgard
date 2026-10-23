@@ -13,7 +13,19 @@
       "pattern": "^[a-f0-9]{24}$",
       "type": "string"
     },
+    "capture_validation_stage": {
+      "enum": [
+        "experimental_multiplayer_unverified",
+        "experimental_singleplayer_unverified",
+        "native_mode_unverified"
+      ]
+    },
     "clan": {
+      "maxLength": 128,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+      "type": "string"
+    },
+    "contributor_link_status": {
       "maxLength": 128,
       "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
       "type": "string"
@@ -139,6 +151,42 @@
       "type": "array"
     },
     "map_status": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "match_context_status": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "native_mode_kind": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "native_mode_variant": {
       "anyOf": [
         {
           "maxLength": 128,

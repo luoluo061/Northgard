@@ -28,6 +28,7 @@ from companion.tests.test_growth_projection import fixture as growth_fixture
 from companion.core.action_diff import ActionDiffer
 from companion.core.labor_transitions import LaborTransitionTracker
 from companion.core.growth_projection import GrowthProgressTracker
+from companion.core.match_context_projection import project_match_context
 
 
 def invented_observation(when=100):
@@ -57,6 +58,31 @@ def invented_observation(when=100):
     observation['labor']=project_labor(raw_labor,parent)
     observation['population_growth']=project_growth(raw_growth,parent)
     observation['population_growth']['observed_progress_intervals']=[]
+    return observation
+
+
+def multiplayer_observation(when=100.,variant='Team3V3',counts=True):
+    observation=invented_observation(when)
+    parent={**observation,'local_player_identity':{'verified':True,'role':'player','entity_uid':31,
+        'is_ai':False,'in_player_list':True},'game_context':{
+        'mode':{'kind':'Multiplayer','args':[{'kind':variant,'args':[]}]},
+        'game_type':{'kind':'Standard','args':[]},'bifrost_data_present':False,'editor_present':False}}
+    raw_growth,_=growth_fixture(float(when),33.+(when-100))
+    observation['population_growth']=project_growth(raw_growth,parent)
+    observation['population_growth']['observed_progress_intervals']=[]
+    observation['game_context']={'mode_kind':'Multiplayer','mode_variant_kind':variant,'game_type_kind':'Standard',
+        'bifrost_data_present':False,'editor_present':False}
+    size=2 if variant=='Team2V2' else 3
+    raw={'schema_version':1,'source':'native_match_context_read_only','scope':'match_roster_counts_and_local_team',
+        'status':'ok','hlboot_sha256':raw_growth['hlboot_sha256'],'data_cdb_sha256':raw_growth['data_cdb_sha256'],
+        **{key:observation[key] for key in ('local_player_entity_uid','session_key','capture_run_id','capture_segment_id')},
+        'time_before':float(when),'time_after':float(when),'game_time_seconds':float(when),'sample_span_game_seconds':0.,
+        'native_mode_kind':'Multiplayer','native_mode_variant':variant,'game_type_kind':'Standard',
+        'native_current_player_count':size*2,'native_player_count':size*2 if counts else None,
+        'native_team_count':2 if counts else None,'native_own_team_size':size if counts else None,
+        'native_other_team_sizes':[size] if counts else None,'native_local_team_id':0 if counts else None,
+        'roster_source':'GameState.startPlayers','team_basis':'Player.teamLeader_or_self','reason_codes':[],'unknown_fields':[]}
+    observation['match_context']=project_match_context(raw,parent)
     return observation
 
 
@@ -384,6 +410,215 @@ class SubmissionPipelineTests(unittest.TestCase):
                 ast.parse(body);count+=1
                 self.assertNotIn('candidate/scripts',body)
         self.assertEqual(count,3)
+
+    def multiplayer_capture(self,*,slot=1,team='A',variant='Team3V3',counts=True,metadata_link=True,manifest_link=True):
+        link={'shared_match_id':'a1234567-1234-4123-8123-123456789abc','declared_format':'3v3','team_label':team,'player_slot':slot}
+        meta=loads(self.metadata.read_bytes());meta['mode']='multiplayer'
+        if metadata_link:meta['match_link']=copy.deepcopy(link)
+        else:meta.pop('match_link',None)
+        self.metadata.write_bytes(json_bytes(meta))
+        self.manifest['collector_version']='0.4.0-alpha'
+        if manifest_link:self.manifest['contributor_context']=copy.deepcopy(link)
+        else:self.manifest.pop('contributor_context',None)
+        rows=[multiplayer_observation(100.,variant,counts),multiplayer_observation(101.,variant,counts)]
+        self.manifest['compatibility']={key:rows[0]['match_context'][key] for key in ('hlboot_sha256','data_cdb_sha256')}
+        self.write_manifest()
+        rows[0]['match_context']['players']=[{'uid':999,'account':'DO_NOT_EXPORT_FOREIGN_PLAYER'}]
+        rows[0]['match_context']['raw_team_leader_pointer']='DO_NOT_EXPORT_FOREIGN_POINTER'
+        self.write_rows('player-observations.ndjson',rows)
+        return link
+
+    def test_multiplayer_roundtrip_preserves_native_context_and_self_reported_link(self):
+        link=self.multiplayer_capture()
+        directory,archive=self.export();item=validate_submission(directory)
+        self.assertEqual(item,validate_submission(archive))
+        self.assertEqual(item['metadata']['match_link'],link);self.assertEqual(item['match_link'],link)
+        self.assertEqual(item['mode_evidence'],'native_multiplayer')
+        self.assertEqual(item['validation_stage'],'experimental_multiplayer_unverified')
+        rows=[loads(x) for x in gzip.decompress((directory/'player-observations.ndjson.gz').read_bytes()).splitlines()]
+        self.assertEqual(rows[0]['match_context']['team_layout'],'3v3')
+        self.assertEqual(rows[0]['match_context']['native_own_team_size'],3)
+        self.assertNotIn('DO_NOT_EXPORT',json.dumps(rows))
+        catalog=build_catalog(self.root/'review/data/submissions')
+        group=catalog['team_groups'][0]
+        self.assertEqual(group['association_status'],'contributor_declared_candidate_unverified')
+        self.assertEqual(group['declared_slots'],{'A':[1],'B':[]})
+        self.assertNotIn('native_local_team_id',json.dumps(group))
+
+    def test_capture_link_fills_metadata_and_conflicts_are_rejected(self):
+        link=self.multiplayer_capture(metadata_link=False)
+        directory,_=self.export();self.assertEqual(validate_submission(directory)['metadata']['match_link'],link)
+        meta=loads(self.metadata.read_bytes());meta['match_link']={**link,'team_label':'B'}
+        self.metadata.write_bytes(json_bytes(meta))
+        with self.assertRaises(SubmissionError):self.export()
+
+    def test_unknown_layout_and_metadata_mode_stay_experimental(self):
+        self.multiplayer_capture(counts=False)
+        meta=loads(self.metadata.read_bytes());meta['mode']='unknown';self.metadata.write_bytes(json_bytes(meta))
+        directory,_=self.export();item=validate_submission(directory)
+        self.assertEqual(item['metadata']['mode'],'unknown')
+        self.assertEqual(item['mode_evidence'],'native_multiplayer')
+        self.assertEqual(item['validation_stage'],'experimental_multiplayer_unverified')
+        rows=[loads(x) for x in gzip.decompress((directory/'player-observations.ndjson.gz').read_bytes()).splitlines()]
+        self.assertIsNone(rows[0]['match_context']['team_layout'])
+        self.assertEqual(rows[0]['match_context']['team_layout_status'],'unavailable')
+
+    def test_multiplayer_declaration_without_native_context_is_not_native_evidence(self):
+        self.multiplayer_capture()
+        rows=[invented_observation(100.),invented_observation(101.)]
+        for row in rows:row.pop('game_context',None);row.pop('match_context',None)
+        self.write_rows('player-observations.ndjson',rows)
+        directory,_=self.export();item=validate_submission(directory)
+        self.assertEqual(item['mode_evidence'],'contributor_declared_native_context_unavailable')
+        self.assertEqual(item['validation_stage'],'experimental_multiplayer_unverified')
+
+    def test_singleplayer_and_multiplayer_native_declarations_cannot_be_swapped(self):
+        self.multiplayer_capture()
+        meta=loads(self.metadata.read_bytes());meta['mode']='singleplayer';self.metadata.write_bytes(json_bytes(meta))
+        with self.assertRaises(SubmissionError):self.export()
+        meta['mode']='multiplayer';self.metadata.write_bytes(json_bytes(meta))
+        rows=[invented_observation(100.),invented_observation(101.)]
+        for row in rows:row['game_context']={'mode_kind':'Singleplayer','mode_variant_kind':'FreeForAll'}
+        self.write_rows('player-observations.ndjson',rows)
+        with self.assertRaises(SubmissionError):self.export()
+
+    def test_known_2v2_cannot_claim_3v3_link(self):
+        self.multiplayer_capture(variant='Team2V2')
+        with self.assertRaises(SubmissionError):self.export()
+
+    def test_resigned_multiplayer_cannot_remove_stage_or_change_shared_link(self):
+        self.multiplayer_capture();directory,_=self.export()
+        original=loads((directory/'submission.json').read_bytes())
+        for attack in ('stage','link'):
+            item=copy.deepcopy(original)
+            if attack=='stage':item.pop('validation_stage')
+            else:item['match_link']['team_label']='B'
+            (directory/'submission.json').write_bytes(json_bytes(item));self.resign(directory)
+            with self.assertRaises(SubmissionError):validate_submission(directory)
+        (directory/'submission.json').write_bytes(json_bytes(original));self.resign(directory)
+        self.rewrite(directory,'player-observations.ndjson.gz',lambda rows:rows[0]['match_context'].update(session_key='f'*24))
+        with self.assertRaises(SubmissionError):validate_submission(directory)
+
+    def test_resigned_match_context_cannot_invent_verified_roster(self):
+        self.multiplayer_capture(counts=False);directory,_=self.export()
+        self.rewrite(directory,'player-observations.ndjson.gz',lambda rows:rows[0]['match_context'].update(team_layout='3v3',team_layout_status='verified_native_roster'))
+        with self.assertRaises(SubmissionError):validate_submission(directory)
+
+    def test_match_link_rejects_cross_client_ids_and_invalid_slots(self):
+        self.multiplayer_capture();meta=loads(self.metadata.read_bytes())
+        original=copy.deepcopy(meta)
+        for key,value in (('peer_session','foreign-session'),('player_slot',4),('shared_match_id','not-a-uuid')):
+            meta=copy.deepcopy(original);meta['match_link'][key]=value;self.metadata.write_bytes(json_bytes(meta))
+            with self.assertRaises(SubmissionError):self.export()
+
+    def test_grouping_requires_compatible_version_fingerprints_and_unique_slots(self):
+        from submission_contract import team_groups
+        self.multiplayer_capture();directory,_=self.export();first=validate_submission(directory)
+        second=copy.deepcopy(first);second['match_id']='b1234567-1234-4123-8123-123456789abc'
+        second['match_link']['team_label']='B';second['metadata']['match_link']['team_label']='B'
+        group=team_groups([first,second])[0]
+        self.assertEqual(len(group['members']),2)
+        # UID/session equality or differences never allocate a slot; only the explicit tags do.
+        self.assertEqual(group['declared_slots'],{'A':[1],'B':[1]})
+        for attack in ('slot','fingerprint','collector','format'):
+            candidate=copy.deepcopy(second)
+            if attack=='slot':candidate['match_link']['team_label']='A'
+            elif attack=='fingerprint':candidate['game_fingerprint']['hlboot_sha256']='c'*64
+            elif attack=='collector':candidate['collector_version']='0.3.0-alpha'
+            else:candidate['match_link']['declared_format']='unknown'
+            with self.subTest(attack=attack):
+                with self.assertRaises(SubmissionError):team_groups([first,candidate])
+
+    def test_two_client_tree_groups_only_declared_slots_and_rejects_collision(self):
+        self.multiplayer_capture();first_dir,_=self.export()
+        link={**self.manifest['contributor_context'],'team_label':'B'}
+        self.manifest.update(collection_id='invented-second-client-collection',contributor_context=link)
+        self.write_manifest()
+        meta=loads(self.metadata.read_bytes());meta['match_link']=link;self.metadata.write_bytes(json_bytes(meta))
+        second_dir,_=self.export()
+        root=self.root/'review/data/submissions'
+        catalog=build_catalog(root)
+        self.assertEqual(len(catalog['matches']),2)
+        self.assertEqual(len(catalog['team_groups']),1)
+        self.assertEqual(catalog['team_groups'][0]['declared_slots'],{'A':[1],'B':[1]})
+        # Deliberately equal local session and unit IDs did not merge contributors.
+        self.assertEqual(validate_submission(first_dir)['source_session'],validate_submission(second_dir)['source_session'])
+        second=loads((second_dir/'submission.json').read_bytes())
+        second['match_link']['team_label']='A';second['metadata']['match_link']['team_label']='A'
+        (second_dir/'submission.json').write_bytes(json_bytes(second));self.resign(second_dir)
+        validate_submission(second_dir)
+        with self.assertRaises(SubmissionError):validate_tree(root)
+
+    def test_native_match_context_fingerprint_mismatch_rejected(self):
+        self.multiplayer_capture();directory,_=self.export()
+        item=loads((directory/'submission.json').read_bytes());item['game_fingerprint']['hlboot_sha256']='c'*64
+        (directory/'submission.json').write_bytes(json_bytes(item));self.resign(directory)
+        with self.assertRaises(SubmissionError):validate_submission(directory)
+
+    def test_unknown_mode_with_roster_cannot_omit_experimental_stage(self):
+        self.multiplayer_capture(metadata_link=False,manifest_link=False)
+        meta=loads(self.metadata.read_bytes());meta['mode']='unknown';self.metadata.write_bytes(json_bytes(meta))
+        rows=[multiplayer_observation(100.),multiplayer_observation(101.)]
+        for row in rows:
+            row['game_context'].pop('mode_kind');row['game_context'].pop('mode_variant_kind')
+            row['match_context'].update(native_mode_kind=None,native_mode_variant=None,configured_team_layout=None,
+                configured_layout_matches_roster=None,status='partial')
+        self.write_rows('player-observations.ndjson',rows)
+        directory,_=self.export();item=validate_submission(directory)
+        self.assertEqual(item['mode_evidence'],'unknown')
+        self.assertEqual(item['validation_stage'],'experimental_multiplayer_unverified')
+        item.pop('validation_stage');(directory/'submission.json').write_bytes(json_bytes(item));self.resign(directory)
+        with self.assertRaises(SubmissionError):validate_submission(directory)
+
+    def test_variant_only_unknown_mode_is_experimental_without_inventing_roster(self):
+        self.multiplayer_capture(metadata_link=False,manifest_link=False)
+        meta=loads(self.metadata.read_bytes());meta['mode']='unknown';self.metadata.write_bytes(json_bytes(meta))
+        rows=[invented_observation(100.),invented_observation(101.)]
+        for row in rows:row['game_context']={'mode_variant_kind':'Team3V3'}
+        self.write_rows('player-observations.ndjson',rows)
+        directory,_=self.export();item=validate_submission(directory)
+        self.assertEqual(item['mode_evidence'],'unknown')
+        self.assertEqual(item['validation_stage'],'experimental_multiplayer_unverified')
+        exported=[loads(line) for line in gzip.decompress((directory/'player-observations.ndjson.gz').read_bytes()).splitlines()]
+        self.assertNotIn('match_context',exported[0])
+        # A known native Singleplayer remains singleplayer even with a team variant.
+        meta['mode']='singleplayer';self.metadata.write_bytes(json_bytes(meta))
+        for row in rows:row['game_context']['mode_kind']='Singleplayer'
+        self.write_rows('player-observations.ndjson',rows)
+        directory,_=self.export();item=validate_submission(directory)
+        self.assertEqual(item['mode_evidence'],'native_singleplayer')
+        self.assertNotIn('validation_stage',item)
+
+    def test_native_multiplayer_requires_variant(self):
+        self.multiplayer_capture()
+        rows=[multiplayer_observation(100.),multiplayer_observation(101.)]
+        for row in rows:
+            row['game_context'].pop('mode_variant_kind')
+            row['match_context'].update(native_mode_variant=None,configured_team_layout=None,configured_layout_matches_roster=None)
+        self.write_rows('player-observations.ndjson',rows)
+        with self.assertRaises(SubmissionError):self.export()
+
+    def test_resigned_context_cannot_relabel_supported_hashes_or_active_scope(self):
+        for attack in ('hashes','scope','current_count'):
+            self.multiplayer_capture();directory,_=self.export()
+            if attack=='hashes':
+                self.rewrite(directory,'player-observations.ndjson.gz',lambda rows:[
+                    row['match_context'].update(hlboot_sha256='c'*64,data_cdb_sha256='d'*64) for row in rows])
+                item=loads((directory/'submission.json').read_bytes())
+                item['game_fingerprint']={'hlboot_sha256':'c'*64,'data_cdb_sha256':'d'*64}
+                (directory/'submission.json').write_bytes(json_bytes(item));self.resign(directory)
+            elif attack=='scope':
+                self.rewrite(directory,'player-observations.ndjson.gz',lambda rows:rows[0]['match_context'].update(scope='no_match_context_data'))
+            else:
+                self.rewrite(directory,'player-observations.ndjson.gz',lambda rows:rows[0]['match_context'].update(native_current_player_count=None))
+            with self.subTest(attack=attack):
+                with self.assertRaises(SubmissionError):validate_submission(directory)
+
+    def test_old_singleplayer_cannot_claim_multiplayer_experimental_stage(self):
+        directory,_=self.export();item=loads((directory/'submission.json').read_bytes())
+        item['validation_stage']='experimental_multiplayer_unverified'
+        (directory/'submission.json').write_bytes(json_bytes(item));self.resign(directory)
+        with self.assertRaises(SubmissionError):validate_submission(directory)
 
     @unittest.skipUnless(sys.platform=='win32','The collector runtime imports Windows read APIs')
     def test_actual_collect_finish_and_error_tails_export_roundtrip(self):

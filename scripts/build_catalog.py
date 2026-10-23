@@ -4,21 +4,24 @@ import argparse
 import json
 from pathlib import Path
 from validate_submission import validate_tree
-from submission_contract import clock,json_bytes
+from submission_contract import clock,json_bytes,team_groups
 
 
 def build_catalog(root):
+    submissions=validate_tree(root)
     return {'schema_version':1,'matches':[{
         'match_id':item['match_id'],'created_date':item['created_date'],
         'clan':item['metadata']['clan'],'mode':item['metadata']['mode'],
         'difficulty':item['metadata']['difficulty'],'experience':item['metadata']['experience'],
         'result':item['metadata']['result'],'tags':item['metadata']['tags'],
         'collector_version':item['collector_version'],'game_build':item['game_build'],
+        'mode_evidence':item['mode_evidence'],'validation_stage':item.get('validation_stage'),
+        'match_link':item.get('match_link'),
         'game_fingerprint':item['game_fingerprint'],
         'start_clock':clock(item['time_start_game_seconds']),'end_clock':clock(item['time_end_game_seconds']),
         'feedback_count':len(item['metadata']['feedback']),
         'path':f"data/submissions/{item['created_date'][:4]}/{item['match_id']}"}
-        for item in validate_tree(root)]}
+        for item in submissions],'team_groups':team_groups(submissions)}
 
 
 if __name__=='__main__':

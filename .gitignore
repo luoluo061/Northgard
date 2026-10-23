@@ -4,6 +4,7 @@ captures/
 research/static/
 research/runtime/reader_locator_cache.json
 submissions-review/
+match-kits/
 dist/
 releases/
 internal-builds/

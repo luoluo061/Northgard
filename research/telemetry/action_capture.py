@@ -27,6 +27,18 @@ from cost_quotes import quote_feast
 from map_capture import capture_map
 from labor_capture import capture_labor
 from growth_capture import capture_growth
+from match_context import capture_match_context
+
+
+def capture_match_context_component(h, me, state, *, profile, identity):
+    """An optional roster context failure must preserve the own-player frame."""
+    try:
+        return capture_match_context(h, me, state, profile=profile, identity=identity)
+    except (ValueError, OSError, KeyError, TypeError, struct.error, OverflowError):
+        return {'schema_version': 1, 'status': 'unavailable',
+            'source': 'native_match_context_read_only', 'scope': 'no_match_context_data',
+            'reason_codes': ['match_context_component_read_failed'],
+            'unknown_fields': ['all'], 'atomic': False, **identity}
 
 
 def capture_operation_component(h, me, state, *, known_zone_ids, owned_building_pointers,
@@ -282,6 +294,8 @@ class ActionProbe(Probe):
                    'biome': string(h, h.field(state, 'biome')),
                    'bifrost_data_present': bool(h.field(state, 'bifrostData')),
                    'editor_present': bool(h.field(state, 'editor'))}
+        match_context = capture_match_context_component(h, me, state,
+            profile=self.profile, identity=identities)
         operations = capture_operation_component(h, me, state,
             known_zone_ids=set(base.get('discovered_zone_ids', [])) | set(zones),
             owned_building_pointers=owned_building_pointers,
@@ -334,6 +348,7 @@ class ActionProbe(Probe):
             'local_player_entity_uid': me_uid,
             'local_player_identity': identity,
             'game_context': context,
+            'match_context': match_context,
             'economy': economy,
             'operations': operations,
             'map_observation': map_observation,

@@ -26,8 +26,9 @@ from situation_timeline import SituationTracker
 from labor_transitions import LaborTransitionTracker
 from growth_projection import GrowthProgressTracker
 from local_rules import verify_generated_rules
+from create_match_kit import shared_uuid
 
-VERSION = '0.3.0-alpha'
+VERSION = '0.4.0-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
 
@@ -160,7 +161,55 @@ def argument_parser():
     parser.add_argument('--interval', type=float, default=0.5)
     parser.add_argument('--out-dir', type=Path)
     parser.add_argument('--research-raw', action='store_true', help='Private research snapshot file, excluded from normal sharing.')
+    parser.add_argument('--shared-match-id', type=shared_uuid,
+                        help='Contributor-declared UUIDv4 shared by willing participants in one match.')
+    parser.add_argument('--team-label', choices=('A', 'B', 'unknown'),
+                        help='Contributor label, independent of the native team ordinal.')
+    parser.add_argument('--player-slot', type=int, choices=(1, 2, 3),
+                        help='Anonymized seat within the contributor-declared team.')
+    parser.add_argument('--declared-format', choices=('3v3', 'unknown'),
+                        help='Contributor declaration; never overrides the native mode or roster.')
     return parser
+
+
+def contributor_context(args, parser):
+    if not args.shared_match_id:
+        if args.team_label is not None or args.player_slot is not None or args.declared_format is not None:
+            parser.error('Team/slot/format labels require --shared-match-id.')
+        return None
+    team = args.team_label or 'unknown'
+    if args.player_slot is not None and team == 'unknown':
+        parser.error('--player-slot requires --team-label A or B.')
+    return {'shared_match_id': args.shared_match_id,
+            'declared_format': args.declared_format or 'unknown',
+            'team_label': team, 'player_slot': args.player_slot}
+
+
+def mode_diagnostics(observation, declared=None):
+    context = observation.get('game_context', {})
+    match = observation.get('match_context', {})
+    mode = context.get('mode_kind') or match.get('native_mode_kind')
+    native_format = match.get('configured_team_layout')
+    if native_format is None:
+        native_format = {'Team2V2': '2v2', 'Team3V3': '3v3', 'Team4V4': '4v4',
+                         'Team2V2V2': '2v2v2', 'Team2V2V2V2': '2v2v2v2',
+                         'Duel': '1v1'}.get(context.get('mode_variant_kind'))
+    link_status = 'not_declared'
+    if declared:
+        if mode == 'Singleplayer' or (declared['declared_format'] == '3v3'
+                and native_format is not None and native_format != '3v3'):
+            link_status = 'conflicts_with_native_context'
+        elif native_format is None or declared['declared_format'] == 'unknown':
+            link_status = 'contributor_declared_native_layout_unverified'
+        else:
+            link_status = 'format_matches_native_configuration_team_labels_still_self_reported'
+    suspected_multiplayer = (mode == 'Multiplayer' or (mode is None and (declared is not None or native_format is not None
+        or (type(match.get('native_team_count')) is int and match['native_team_count'] > 1))))
+    return {'native_mode_kind': mode,
+            'native_configured_format': native_format,
+            'capture_validation_stage': ('experimental_multiplayer_unverified' if suspected_multiplayer else
+                'experimental_singleplayer_unverified' if mode == 'Singleplayer' else 'native_mode_unverified'),
+            'contributor_link_status': link_status}
 
 
 def local_setup_ready():
@@ -172,6 +221,7 @@ def main(argv=None):
         sys.stdout.reconfigure(encoding='utf-8')
     parser = argument_parser()
     args = parser.parse_args(argv)
+    declared = contributor_context(args, parser)
     if sys.version_info < (3, 11) or sys.platform != 'win32' or struct.calcsize('P') != 8:
         parser.error('Python >=3.11 on 64-bit Windows is required.')
     if not local_setup_ready():
@@ -191,6 +241,9 @@ def main(argv=None):
                 'interval_wall_seconds_requested': args.interval,
                 'duration_wall_seconds_limit': args.seconds,
                 'game_time_is_authoritative': True,
+                'contributor_context': declared,
+                'contributor_context_source': 'participant_declaration_not_native_match_identity',
+                'release_live_multiplayer_validation': 'not_run',
                 'pause_policy': 'Repeated game times are observations, never extra production seconds.',
                 'raw_private_research_enabled': args.research_raw,
                 'limitations': ['State sampling is non-atomic and does not capture every input command.',
@@ -198,7 +251,10 @@ def main(argv=None):
                                 'Population rules currently verified for ordinary Bear/Raven only.',
                                 'Economic reconciliation covers inspected intervals, not a complete transaction ledger.',
                                 'Per-unit native final rates are not persistent caches; labor records inputs, not measured unit income.',
-                                'Growth bonus and exact birth eligibility remain incomplete; interval ETA is conditional.']}
+                                'Growth bonus and exact birth eligibility remain incomplete; interval ETA is conditional.',
+                                'Multiplayer capture is experimental; release-level short/full 3v3 validation has not run.',
+                                'Shared UUID and A/B seats are participant declarations, not verified cross-client identity.',
+                                'Allied effects, trades and shared-vision discovery provenance are not fully attributed.']}
     atomic_json(output / 'manifest.json', manifest)
     atomic_json(output / 'latest.json', {'status': 'waiting_for_game', 'captured_at': now()})
     handles = {name: (output / name).open('x', encoding='utf-8') for name in SHARE_FILES if name.endswith('.ndjson')}
@@ -238,6 +294,7 @@ def main(argv=None):
                 if raw.get('status') == 'ok' and projected.get('status') != 'ok':
                     status = 'player_observation_rejected'
                 if status == 'ok':
+                    diagnostics = mode_diagnostics(projected, declared)
                     projected['sequence'] = sequence
                     observed_growth = growth_progress.update(projected)
                     if 'population_growth' in projected:
@@ -262,6 +319,9 @@ def main(argv=None):
                     previous_time = current_time
                     manifest['last_game_time_seconds'] = current_time
                     manifest['last_clan'] = raw.get('clan')
+                    manifest['last_game_context'] = projected.get('game_context', {})
+                    manifest['last_match_context'] = projected.get('match_context', {})
+                    manifest['last_mode_diagnostics'] = diagnostics
                     manifest['last_population'] = projected.get('population')
                     manifest['last_population_cap'] = projected.get('population_cap')
                     manifest['last_own_unit_entity_count'] = len(projected.get('units', []))
@@ -273,6 +333,7 @@ def main(argv=None):
                     for name, state_value in (
                             ('operations', projected.get('operations', {}).get('status', 'missing')),
                             ('map', projected.get('map_observation', {}).get('status', 'missing')),
+                            ('match_context', projected.get('match_context', {}).get('status', 'missing')),
                             ('labor', projected.get('labor', {}).get('status', 'missing')),
                             ('population_growth', projected.get('population_growth', {}).get('status', 'missing')),
                             ('feast_quote', projected.get('operations', {}).get('feast_quote', {}).get('status', 'missing'))):
@@ -296,6 +357,11 @@ def main(argv=None):
                           'economy_status': raw.get('economy', {}).get('status'),
                           'operations_status': projected.get('operations', {}).get('status'),
                           'map_status': projected.get('map_observation', {}).get('status'),
+                          'match_context_status': projected.get('match_context', {}).get('status'),
+                          'native_mode_kind': projected.get('game_context', {}).get('mode_kind'),
+                          'native_mode_variant': projected.get('game_context', {}).get('mode_variant_kind'),
+                          'capture_validation_stage': mode_diagnostics(projected, declared)['capture_validation_stage'],
+                          'contributor_link_status': mode_diagnostics(projected, declared)['contributor_link_status'],
                           'labor_status': projected.get('labor', {}).get('status'),
                           'individual_rate_status': projected.get('labor', {}).get('individual_rate_status'),
                           'population_growth_status': projected.get('population_growth', {}).get('status'),

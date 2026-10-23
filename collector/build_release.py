@@ -17,9 +17,19 @@ import sys
 import zipfile
 
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'research/telemetry/match_context.py',
+    'companion/core/match_context_projection.py',
+    'research/telemetry/test_match_context.py',
+    'schemas/metadata.multiplayer.example.json',
+    '.github/ISSUE_TEMPLATE/collector-problem.yml',
+    'CONTRIBUTING.md',
+    'scripts/create_match_kit.py',
+    'tests/test_match_kit.py',
+    'tests/test_collector_match_labels.py',
+    'docs/MULTIPLAYER_3V3.md',
     '.github/workflows/offline-tests.yml',
     '.github/workflows/validate-submissions.yml',
     '.github/ISSUE_TEMPLATE/player-experience.yml',

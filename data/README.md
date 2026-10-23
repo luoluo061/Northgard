@@ -6,12 +6,16 @@
 
 每局的`submission.json`保存采集/游戏版本、双指纹、来源、氏族、模式、地图条件、经验水平、目标、结果、标签与带游戏时间的反馈。`capture-manifest.json`与四条压缩流保存质量、分段和固定字段数据；SHA清单用于发现篡改。未知不补零，经验不当作已证机制。
 
+0.4.0-alpha接收标记为`experimental_multiplayer_unverified`的多人本人视角实验数据。原生模式、Team3V3配置与起始队伍聚合人数分别保留；没有完整原生计数时不声称布局已核验。人数可能含AI，不代表六名人类。不会采集或上传队友／对手的单位名单、资源和隐蔽地图动态；多人整局实测仍待完成。
+
 `catalog.json`是可复算的检索索引，不是分析结论：
 
 ```powershell
 python scripts/validate_submission.py data/submissions --tree
 python scripts/build_catalog.py --root data/submissions --output data/catalog.json
 ```
+
+索引保留`matches`并增加`team_groups`：以可选的`match_link.shared_match_id`形成参与者自报候选组，只接收版本、双指纹和声明格式一致的贡献，已知队伍A/B与1–3号位置冲突会拒绝。每个人独立贡献、独立授权；共享UUID不是游戏原生的跨客户端身份，本地session、单位UID、原生队伍序号不能跨电脑拼接。元数据、采集manifest标签与submission中的共享标签不一致时拒绝，未知保持未知。旧单人v1贡献继续兼容。
 
 增长、职业、资源、殖民、建造与经验都按游戏时钟连接。统一处理仍须按版本、模式、氏族、已学知识、季节、地块和质量状态分层，不能跨run/segment积分。
 

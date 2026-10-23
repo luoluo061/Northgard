@@ -4,7 +4,11 @@ param(
     [ValidateRange(0.1, 10)][double]$Interval = 0.5,
     [string]$OutDir = "",
     [string]$PythonExecutable = "",
-    [switch]$ResearchRaw
+    [switch]$ResearchRaw,
+    [string]$SharedMatchId = "",
+    [ValidateSet('A', 'B', 'unknown')][string]$TeamLabel,
+    [ValidateRange(1, 3)][int]$PlayerSlot,
+    [ValidateSet('3v3', 'unknown')][string]$DeclaredFormat
 )
 $ErrorActionPreference = "Stop"
 function Get-CollectorSha256([string]$LiteralFilePath) {
@@ -84,6 +88,10 @@ if ($PSBoundParameters.ContainsKey('Seconds')) {
     $captureArgs += @('--seconds', $Seconds.ToString([Globalization.CultureInfo]::InvariantCulture))
 }
 if ($ResearchRaw) { $captureArgs += '--research-raw' }
+if ($SharedMatchId) { $captureArgs += @('--shared-match-id', $SharedMatchId) }
+if ($PSBoundParameters.ContainsKey('TeamLabel')) { $captureArgs += @('--team-label', $TeamLabel) }
+if ($PSBoundParameters.ContainsKey('PlayerSlot')) { $captureArgs += @('--player-slot', $PlayerSlot.ToString([Globalization.CultureInfo]::InvariantCulture)) }
+if ($PSBoundParameters.ContainsKey('DeclaredFormat')) { $captureArgs += @('--declared-format', $DeclaredFormat) }
 Write-Host "Starting the local read-only collector. No time limit unless Seconds is supplied. Stop with Ctrl+C. No automatic upload."
 & $pythonCommand @pythonPrefix @captureArgs
 exit $LASTEXITCODE

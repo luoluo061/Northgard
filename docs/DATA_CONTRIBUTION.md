@@ -4,7 +4,7 @@
 
 ## 1. 先完成一局并停止采集
 
-按照仓库安装说明启动采集器，由本人正常玩单人局。采集停止后 `manifest.json` 必须有 `recording_state: "stopped"`。采集期间打包会被拒绝。不要把整个 `captures` 文件夹加入 Git，也不要发送 `research-raw.ndjson`、游戏资产、存档或内存转储。
+按照仓库安装说明启动采集器，由本人正常玩单人局或参与 3v3 多人本人视角实验。每位参与者只采集自己客户端的本人单位、资源、增长和操作；不会获得队友或对手的经济、单位名单与战争迷雾内动态。采集停止后 `manifest.json` 必须有 `recording_state: "stopped"`。采集期间打包会被拒绝。不要把整个 `captures` 文件夹加入 Git，也不要发送 `research-raw.ndjson`、游戏资产、存档或内存转储。
 
 一份贡献只对应一个 `session_key`。同一次采集遇到多局会要求明确选择 `--session-key`；读档、回退、采样中断的 segment 仍保留独立身份，分析时不能跨分段做连续产出积分。原始本地 session／run／segment 字符串在贡献包中改为 24 位 SHA-256 摘要，保留连接关系。
 
@@ -12,7 +12,7 @@
 
 ## 2. 填写元数据与自己的经验
 
-复制 [`schemas/metadata.example.json`](../schemas/metadata.example.json) 到仓库外的 `my-match.json`。`null` 表示没有确认，不能用 `0`、空氏族或猜测填充。当前回传协议只接受 `singleplayer`／`unknown`；多人视角的采集政策与验证尚未完成。
+单人局复制 [`schemas/metadata.example.json`](../schemas/metadata.example.json)，多人本人视角实验复制 [`schemas/metadata.multiplayer.example.json`](../schemas/metadata.multiplayer.example.json)，到仓库外的 `my-match.json`。`null` 表示没有确认，不能用 `0`、空氏族或猜测填充。`mode` 接受 `singleplayer`、`multiplayer`、`unknown`；原生模式与明确自报模式冲突会被拒绝。多人数据一律标记 `experimental_multiplayer_unverified`，目前仍需真实多人整局校验，不能因为能够导出就称为已验证采集。
 
 模板默认 `consent_to_share: false`，因此直接使用模板会被导出器拒绝。必须由贡献者审阅后明确改为 `true`。这表示同意把此份审阅后的本人游戏数据、标签和经验文字贡献到公开仓库，供公众查看与后续统一分析。文字里不要填写姓名、Steam ID、账号、安装路径、联系方式或凭证。自动检查能发现常见格式，不能替代本人审阅自由文字；已有这一局及本公开仓库的明确上传授权时，不重复确认。
 
@@ -25,8 +25,30 @@
 | `result` | 胜／败／退出／未完成／未知；不可仅从采集停止推断胜负 |
 | `tags` | 最多 20 个短标签，可用中文、字母、数字、下划线或连字符 |
 | `feedback` | 连接具体游戏时刻的观察、推测、建议、反例；详见 [玩家经验格式](PLAYER_FEEDBACK.md) |
+| `match_link` | 可选的自报共享对局标签，连接不同参与者贡献的候选关系；不填可为 `null`，不是游戏原生的全局身份 |
 
-本人原生 `game_context` 独立保存模式、模式变体、难度、地形与特殊模式标记。元数据是贡献者说明，不能覆盖采集出的模式。若原生明确不是 `Singleplayer`，当前导出器拒绝；未捕获上下文时仍可保留贡献者对单人局的声明，但 `submission.mode_evidence` 会明确标为 `contributor_declared_native_context_unavailable`，不会写成原生验证。未知保留 `unknown`。
+本人原生 `game_context` 独立保存模式、模式变体、难度、地形与特殊模式标记；`match_context` 另存原生模式枚举和起始队伍的聚合人数。这两条原生信息互相校验，贡献者填写的标签不能覆盖它们。`submission.mode_evidence` 分为 `native_singleplayer`、`native_multiplayer`、`contributor_declared_native_context_unavailable`、`unknown`。未捕获原生上下文时允许保留明确自报，仍标记未核验；原生明确多人而贡献者填 `unknown` 时，也必须带多人实验阶段，不能借未知绕过。
+
+如果原生模式和元数据模式都未知，但已有原生起始队伍计数，也保守标记多人实验阶段，`mode_evidence` 仍保留 `unknown`，不会靠人数猜出原生模式。明确单人数据不会因为加入新协议而被升级为已验证多人。
+
+`Team3V3` 是配置枚举；只有完整起始队伍计数支持、且与配置一致，才保留 `team_layout_status: verified_native_roster`。仅有配置、缺少起始名单聚合计数时，布局保持 `null`／`unavailable`。起始人数可能含 AI，不是人类玩家数，也不是完整对战数据。已知原生 2v2／4v4 等布局不能贴成 3v3。即使原生布局可核对，整份多人数据仍保持 `experimental_multiplayer_unverified`，不会自动升级为实测通过。
+
+## 多名参与者如何连接同一场 3v3
+
+先共同约定一个小写 UUIDv4 `shared_match_id`，例如由一位参与者生成后发给同局其他贡献者。各人只填写自己明确知道的队伍标签和位置；不知道就用 `unknown`／`null`。A／B 是参与者协商的标签，位置 1–3 也是自报；原生 `native_local_team_id` 是各客户端起始队伍顺序，不能自动当成 A／B。
+
+```json
+"match_link": {
+  "shared_match_id": "a1234567-1234-4123-8123-123456789abc",
+  "declared_format": "3v3",
+  "team_label": "A",
+  "player_slot": 1
+}
+```
+
+不要直接使用上面的示例 ID 当作真实对局 ID。采集时可以使用 `--shared-match-id`、`--declared-format 3v3`、`--team-label A`、`--player-slot 1`，或使用 [3v3 安装说明](MULTIPLAYER_3V3.md) 中的参与者安排。采集器把它们写入本机 manifest 的 `contributor_context`；不会复制队友的数据。导出时把这份自报信息和元数据的 `match_link` 合并，只一方有值时采用它，两方非空但不一致就拒绝。生成的 `submission.match_link` 与 `metadata.match_link` 必须完全相同。
+
+每位参与者仍独立生成一个贡献 UUID、独立脱敏审阅和授权上传。共享对局 ID 只用于建立候选组，不证明大家确实同局；本地 `session_key`、单位 UID 和原生队伍序号不得跨电脑直接连接。多人关联不要求额外许可开关，明确的多人元数据、实验阶段与既有逐局公开分享授权共同适用。
 
 ## 3. 生成待审阅包
 
@@ -53,6 +75,8 @@ submissions-review/
 ```
 
 原采集目录保持原样。新目录采用固定文件名与逐层字段白名单重新生成；`latest.json` 因为重复且可能混入后续状态而不接收入库。unknown key 只会在本地投影时丢弃并计数，绝不会原样复制。贡献包校验阶段遇到任何未知字段都会拒绝。要增加字段，先修改协议、测试和文档，再重新导出，不能绕过校验。
+
+模式与共享标签的扩展是 v1 协议的可选字段，旧单人贡献仍可读取。新多人贡献必须明确保存实验阶段；不得删掉这个标记来混入单人已测数据。
 
 每份贡献总展开数据上限 1 GiB，单流 512 MiB，单条记录 2 MiB，单个压缩数据文件 20 MiB。记录较长时应缩短下一次采集或与维护者讨论外部数据存储；不要手工截断 `.gz`、删掉部分记录后改哈希来假装完整。仓库只保留压缩且已脱敏的贡献，原始研究数据留本机；数量增加后维护者应迁移大体积数据到专用存储并保留目录索引，Git 不是无限数据仓库。
 
@@ -87,6 +111,8 @@ git commit -m "data: add reviewed Bear singleplayer match <UUID>"
 git push my-fork data/<UUID>
 gh pr create --repo luoluo061/Northgard --head <你的 GitHub 用户名>:data/<UUID> --base main --title "data: Bear singleplayer <UUID>" --body-file submission-pr.txt
 ```
+
+目录索引保留原有 `matches`，新增 `team_groups` 自报候选组。只把同一共享 ID、相同采集器版本、游戏 build、双文件指纹与声明格式的贡献放在一起；不兼容的共同 ID 会拒绝。同一候选组内已知队伍／位置重复（例如两个 A1）也拒绝，未知位置不会自动补齐。组里有六份标签也不能证明六名人类或证明已完成跨客户端状态同步。统一处理需要继续检查各人的覆盖时间、分段、缺失和自报标签，不能直接把本地单位编号拼成队伍数据。
 
 新建 `submission-pr.txt` 时只写氏族、采集版本、游戏 build、测试目标、结果、覆盖时间、已知中断和是否有经验反馈，不要把原文件路径／账号信息复制进去。默认分支不是 `main` 时使用实际默认分支。重复执行 `git remote add` 已存在会失败，改用已审阅的远端配置，不要随意覆盖其他远端。创建 fork 和 PR 时使用贡献者自己的 GitHub 账户；本工具不要求也不保存 GitHub token。
 

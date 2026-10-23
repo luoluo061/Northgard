@@ -12,8 +12,9 @@ import struct
 import zipfile
 import zlib
 
-from submission_contract import (DATA_FILES,FILES,MANIFEST_SCHEMA,MAX_COMPRESSED,MAX_EXPANDED,
-    MAX_RECORD,MAX_TOTAL_EXPANDED,RECORD_SCHEMAS,SUBMISSION_SCHEMA,SubmissionError,clock,digest,loads,validate)
+from submission_contract import (DATA_FILES,FILES,MANIFEST_SCHEMA,MATCH_CONTEXT,MAX_COMPRESSED,MAX_EXPANDED,
+    MAX_RECORD,MAX_TOTAL_EXPANDED,RECORD_SCHEMAS,SUBMISSION_SCHEMA,VARIANT_LAYOUTS,SubmissionError,
+    clock,digest,loads,mode_facts,observe_mode,resolve_mode,team_groups,validate)
 
 
 def regular(path):
@@ -131,7 +132,7 @@ def validate_observation_scope(row):
     for event in row.get('own_events',[]):
         if event.get('actor') != 'self' or ('zone_id' in event and event['zone_id'] not in known):
             raise SubmissionError('Native event outside own scope')
-    for component_name in ('economy','labor','population_growth','operations','map_observation'):
+    for component_name in ('economy','labor','population_growth','operations','map_observation','match_context'):
         component=row.get(component_name)
         if not component:
             continue
@@ -140,6 +141,8 @@ def validate_observation_scope(row):
                 'native_individual_rates_available','actual_settled_amounts_available','individual_rate_status','complete_transaction_ledger'}
             if set(component)-diagnostic_keys:
                 raise SubmissionError('Unavailable component carries game payload')
+            if component_name=='match_context' and component.get('scope')!='no_match_context_data':
+                raise SubmissionError('Rejected match context must be data-free')
             continue
         required={'schema_version','status','source','session_key','capture_run_id','capture_segment_id','game_time_seconds'}
         if component_name!='economy':
@@ -191,6 +194,49 @@ def validate_observation_scope(row):
                 canonical=building_by_id.get(building['uid'])
                 if canonical is None or building['zone_id']!=canonical['zone_id'] or building['kind']!=canonical['kind']:
                     raise SubmissionError('Cost record outside own building scope')
+        elif component_name=='match_context':
+            validate_match_context(component,row)
+
+
+def validate_match_context(component,row):
+    if component['scope']!='match_roster_counts_and_local_team':
+        raise SubmissionError('Active match context scope differs from native roster contract')
+    if set(MATCH_CONTEXT['properties'])-set(component):
+        raise SubmissionError('Active match context is missing its fixed native fields')
+    before,after,when,span=(component[key] for key in ('time_before','time_after','game_time_seconds','sample_span_game_seconds'))
+    if (abs(before-when)>1e-7 or not 0<=after-before<=5 or abs(span-(after-before))>1e-7 or
+            not -.025<=row['game_time_seconds']-after<=5):
+        raise SubmissionError('Match context game clock differs from parent')
+    context=row.get('game_context',{})
+    if ((component['native_mode_kind'] in ('Multiplayer','Singleplayer') and component['native_mode_variant'] is None) or
+            (component['native_mode_variant'] is not None and component['native_mode_kind'] not in ('Multiplayer','Singleplayer'))):
+        raise SubmissionError('Native play mode and variant are inconsistent')
+    for first,second in (('mode_kind','native_mode_kind'),('mode_variant_kind','native_mode_variant'),('game_type_kind','game_type_kind')):
+        if context.get(first) is not None and component.get(second) is not None and context[first]!=component[second]:
+            raise SubmissionError('Native match context conflicts with game context')
+    if component['configured_team_layout']!=VARIANT_LAYOUTS.get(component['native_mode_variant']):
+        raise SubmissionError('Configured team layout differs from native mode variant')
+    count,teams,own,others,ordinal=(component[key] for key in ('native_player_count','native_team_count',
+        'native_own_team_size','native_other_team_sizes','native_local_team_id'))
+    if all(value is None for value in (count,teams,own,others,ordinal)):
+        if (component['team_layout'] is not None or component['team_layout_status']!='unavailable' or
+                component['configured_layout_matches_roster'] is not None):
+            raise SubmissionError('Missing native roster cannot claim a verified team layout')
+        return
+    if (any(value is None for value in (count,teams,own,others,ordinal)) or len(others)+1!=teams or
+            sum(others)+own!=count or not ordinal<teams or
+            component['native_current_player_count'] is not None and component['native_current_player_count']>count):
+        raise SubmissionError('Native match roster counts disagree')
+    layout='v'.join(str(value) for value in sorted([own,*others],reverse=True))
+    configured=component['configured_team_layout']
+    agrees=layout==configured if configured is not None else None
+    if component['configured_layout_matches_roster']!=agrees:
+        raise SubmissionError('Native configured/roster agreement marker is incorrect')
+    if agrees is False:
+        if component['team_layout'] is not None or component['team_layout_status']!='unavailable':
+            raise SubmissionError('Conflicting native roster/configuration cannot claim verified layout')
+    elif component['team_layout']!=layout or component['team_layout_status']!='verified_native_roster':
+        raise SubmissionError('Native roster layout differs from aggregate team sizes')
 
 
 def validate_gzip_wrapper(raw):
@@ -240,7 +286,7 @@ def validate_submission(path):
     file_entries={e['path']:e for e in submission['files']}
     if len(file_entries)!=6 or set(file_entries)!=set(DATA_FILES)|{'capture-manifest.json','SUMMARY.md'}:
         raise SubmissionError('Invalid file manifest')
-    total=0; player_times=[];observed_clans=set();observed_modes=set();last_times={};histories={}
+    total=0; player_times=[];observed_clans=set();observed=mode_facts();last_times={};histories={}
     for name in (*DATA_FILES,'capture-manifest.json','SUMMARY.md'):
         entry=file_entries[name]
         raw=payload[name]
@@ -270,6 +316,11 @@ def validate_submission(path):
                         if name.startswith('player-'):
                             validate_observation_scope(row)
                             if row.get('status')=='ok':
+                                match_context=row.get('match_context',{})
+                                if match_context.get('status') in ('ok','partial'):
+                                    for key,expected_hash in submission['game_fingerprint'].items():
+                                        if expected_hash is not None and match_context[key]!=expected_hash:
+                                            raise SubmissionError('Native match context fingerprint differs from submission')
                                 if when is None:
                                     raise SubmissionError('Missing player clock')
                                 identity_key=tuple(row.get(key) for key in ('session_key','capture_run_id','capture_segment_id'))
@@ -283,9 +334,7 @@ def validate_submission(path):
                                 history['units'].update(v['uid'] for v in row.get('units',[]))
                                 history['zones'].update(row.get('owned_zone_ids',[])+row.get('discovered_zone_ids',[]))
                                 player_times.append(when);observed_clans.add(row.get('clan'))
-                                context=row.get('game_context',{})
-                                if context.get('mode_kind') is not None:
-                                    observed_modes.add(context['mode_kind'])
+                                observe_mode(observed,row)
                         elif name=='actions.ndjson.gz':
                             parent_identity=tuple(row.get(key) for key in ('session_key','capture_run_id','capture_segment_id'))
                             has_payload=bool(row.get('events') or row.get('resource_changes') or row.get('labor_transitions')
@@ -327,12 +376,13 @@ def validate_submission(path):
         raise SubmissionError('Player coverage disagrees with manifest')
     if observed_clans != {submission['metadata']['clan']}:
         raise SubmissionError('Clan differs from metadata')
-    if observed_modes and observed_modes!={'Singleplayer'}:
-        raise SubmissionError('Native context conflicts with supported singleplayer contribution')
-    mode_evidence=('native_singleplayer' if observed_modes=={'Singleplayer'} else
-        'contributor_declared_native_context_unavailable' if submission['metadata']['mode']=='singleplayer' else 'unknown')
-    if submission['mode_evidence']!=mode_evidence:
+    if submission.get('match_link')!=submission['metadata'].get('match_link'):
+        raise SubmissionError('Submission match link differs from metadata')
+    mode=resolve_mode(submission['metadata'],observed,submission.get('match_link'))
+    if submission['mode_evidence']!=mode['mode_evidence']:
         raise SubmissionError('Mode evidence does not match native context/declaration')
+    if submission.get('validation_stage')!=mode['validation_stage']:
+        raise SubmissionError('Multiplayer requires the experimental unverified stage; singleplayer cannot claim it')
     for feedback in submission['metadata']['feedback']:
         if not min(player_times)<=feedback['game_time_seconds']<=max(player_times):
             raise SubmissionError('Feedback outside coverage')
@@ -363,6 +413,7 @@ def validate_tree(root):
             if key in identities:
                 raise SubmissionError('Duplicate capture/session contribution')
             identities.add(key);output.append(item)
+    team_groups(output)
     return output
 
 

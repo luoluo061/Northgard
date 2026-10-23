@@ -14,8 +14,8 @@ import uuid
 import zipfile
 
 from submission_contract import (DATA_FILES, FILES, MANIFEST_SCHEMA, MAX_COMPRESSED,
-    MAX_EXPANDED, MAX_RECORD, METADATA, RECORD_SCHEMAS, SUBMISSION_SCHEMA,
-    SubmissionError, clock, digest, json_bytes, loads, project, validate)
+    MAX_EXPANDED, MAX_RECORD, METADATA, MATCH_LINK, RECORD_SCHEMAS, SUBMISSION_SCHEMA,
+    SubmissionError, clock, digest, json_bytes, loads, mode_facts, observe_mode, project, resolve_mode, validate)
 
 
 def identity(value):
@@ -92,7 +92,7 @@ def capture_rows(path, *, actions=False):
         yield from action_records(original) if actions else (original,)
 
 
-def summarize(metadata, start, end, record_counts):
+def summarize(metadata, start, end, record_counts, mode=None):
     start_clock,end_clock = clock(start),clock(end)
     def label(c):
         return f"A{c['year']} 年 {c['month']} 月 · " + {'early':'月初','middle':'月中','late':'月末'}[c['phase']]
@@ -105,6 +105,13 @@ def summarize(metadata, start, end, record_counts):
         '- 固定字段投影：不含私有 raw、latest、进程地址、安装路径、姓名、账号或敌方全图。',
         '- 请逐项审阅 submission.json 的目标、标签和反馈，自由文字仍需本人检查。', '',
         '## 游戏目标', '', metadata['goal'], '', '## 记录数', '']
+    if mode and mode['validation_stage'] is not None:
+        lines[4:4]=['- 多人本人视角实验数据：experimental_multiplayer_unverified。尚未完成真实多人整局校验。',
+            '- Team3V3 配置、原生起始队伍人数与贡献者自报 A/B 标签分别记录；人数可能含 AI，不当作六名人类证明。']
+    if metadata.get('match_link') is not None:
+        link=metadata['match_link']
+        lines[4:4]=[f"- 自报共享对局：{link['shared_match_id']}；格式 {link['declared_format']}；队伍 {link['team_label']}；位置 {link['player_slot'] if link['player_slot'] is not None else '未知'}。",
+            '- 共享 ID 仅为候选关联；本地 session、单位 UID 和原生队伍序号不跨客户端连接。']
     lines.extend(f'- {name}: {count}' for name,count in record_counts.items())
     lines += ['', '## 玩家经验（不是已证规则）', '']
     for feedback in metadata['feedback']:
@@ -129,6 +136,15 @@ def prepare(capture, metadata_path, output, *, session_key=None):
         raise SubmissionError('Metadata too large')
     metadata=loads(meta_raw)
     validate(metadata,METADATA)
+    capture_link=manifest.get('contributor_context')
+    declared_link=metadata.get('match_link')
+    if capture_link is not None:
+        validate(capture_link,MATCH_LINK)
+    if capture_link is not None and declared_link is not None and capture_link!=declared_link:
+        raise SubmissionError('Capture contributor_context conflicts with metadata match_link')
+    match_link=declared_link if declared_link is not None else capture_link
+    if match_link is not None:
+        metadata['match_link']=match_link
     sessions=set()
     for row in source_rows(capture/'player-observations.ndjson'):
         if row.get('status') == 'ok':
@@ -147,7 +163,7 @@ def prepare(capture, metadata_path, output, *, session_key=None):
     today=date.today().isoformat()
     destination=output/'data'/'submissions'/today[:4]/match_id
     destination.mkdir(parents=True,exist_ok=False)
-    files=[]; dropped=[0]; counts={}; times=[]; observed_clans=set(); observed_modes=set(); expanded_total=0
+    files=[]; dropped=[0]; counts={}; times=[]; observed_clans=set(); observed=mode_facts(); expanded_total=0
     try:
         for name in DATA_FILES:
             source=capture/name.removesuffix('.gz')
@@ -178,9 +194,7 @@ def prepare(capture, metadata_path, output, *, session_key=None):
                                 raise SubmissionError('Accepted player sample requires a game clock')
                             times.append(when)
                             observed_clans.add(row.get('clan'))
-                            context=row.get('game_context',{})
-                            if context.get('mode_kind') is not None:
-                                observed_modes.add(context['mode_kind'])
+                            observe_mode(observed,row)
                         raw=(json.dumps(row,ensure_ascii=False,separators=(',',':'),allow_nan=False)+'\n').encode('utf-8')
                         expanded+=len(raw); expanded_total+=len(raw)
                         if expanded > MAX_EXPANDED or expanded_total > 1024*1024*1024:
@@ -197,10 +211,7 @@ def prepare(capture, metadata_path, output, *, session_key=None):
             raise SubmissionError('Capture manifest changed during export; stop collector first')
         if len(observed_clans) != 1 or None in observed_clans:
             raise SubmissionError('Ambiguous observed clan')
-        if observed_modes and observed_modes!={'Singleplayer'}:
-            raise SubmissionError('Native context is not verified singleplayer; multiplayer contribution is not supported yet')
-        mode_evidence=('native_singleplayer' if observed_modes=={'Singleplayer'} else
-            'contributor_declared_native_context_unavailable' if metadata['mode']=='singleplayer' else 'unknown')
+        mode=resolve_mode(metadata,observed,match_link)
         observed_clan=next(iter(observed_clans))
         if metadata['clan'] not in (None,observed_clan):
             raise SubmissionError('Metadata clan disagrees with captured player')
@@ -216,7 +227,7 @@ def prepare(capture, metadata_path, output, *, session_key=None):
             'dropped_source_fields':dropped[0],
             'excluded_files_policy':'fixed_names_only_no_raw_no_latest_no_paths_no_opponents'}
         validate(shared_manifest,MANIFEST_SCHEMA)
-        extra={'capture-manifest.json':json_bytes(shared_manifest),'SUMMARY.md':summarize(metadata,start,end,counts)}
+        extra={'capture-manifest.json':json_bytes(shared_manifest),'SUMMARY.md':summarize(metadata,start,end,counts,mode)}
         for name,raw in extra.items():
             (destination/name).write_bytes(raw)
             files.append({'path':name,'size_bytes':len(raw),'sha256':digest(raw),'expanded_bytes':len(raw),'record_count':1})
@@ -227,11 +238,15 @@ def prepare(capture, metadata_path, output, *, session_key=None):
             'created_date':today,'metadata':metadata,'collector_version':manifest.get('collector_version'),
             'game_build':manifest.get('game_build'),
             'game_fingerprint':{key:compatibility.get(key) for key in ('hlboot_sha256','data_cdb_sha256')},
-            'mode_evidence':mode_evidence,
+            'mode_evidence':mode['mode_evidence'],
             'capture_id':source_collection,'source_session':identity(session_key),
             'time_start_game_seconds':start,'time_end_game_seconds':end,
             'clock_policy':'A800_March_epoch_60_game_seconds_per_month_thirds_are_report_buckets',
             'scope':'own_player_core_whitelist_v1_no_opponent_or_raw_memory','files':files,'record_schema_version':1}
+        if match_link is not None:
+            submission['match_link']=match_link
+        if mode['validation_stage'] is not None:
+            submission['validation_stage']=mode['validation_stage']
         validate(submission,SUBMISSION_SCHEMA)
         (destination/'submission.json').write_bytes(json_bytes(submission))
         checksum_lines=[]
