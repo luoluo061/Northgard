@@ -6,11 +6,11 @@
 
 ## 让你的 Codex 安装
 
-把下面这段发给你自己的 Codex，并提供已获访问权限的仓库链接：
+把[仓库链接](https://github.com/luoluo061/Northgard)和下面这段发给你自己的 Codex：
 
 > 请阅读本仓库的 AGENTS.md、docs/INSTALL_WITH_CODEX.md 和数据说明，帮我安装本地采集器。先检查 Windows x64、Python 3.11+ 与游戏版本，生成本地必要规则，再做检查。等我开好单人局后采集。不要控制游戏、上传原始研究数据或更改游戏文件；先把能读到什么和仍缺什么告诉我。之后只有我明确要求回传时，再生成带标签的贡献包并按文档提交。
 
-仓库目前是私有的。其他玩家须先由所有者授予访问权限；本工具不会改变仓库可见性。
+仓库已公开，任何玩家都可以直接查看、克隆或 fork，无需邀请。提交到仓库的对局贡献与经验反馈也会公开可见；采集仍默认只保存在本机。
 
 ## 本机快速开始
 
@@ -54,7 +54,7 @@ python collector/collect.py --seconds 120 --interval 0.5 --out-dir captures/firs
 
 采集默认仅留在本机，不自动联网。回传流程是：**结束采集 → 填标签与经验 → 本地脱敏投影 → 验证并审阅 → 用户授权 → 分支/PR → 统一入库处理**。
 
-- [数据贡献协议](docs/DATA_CONTRIBUTION.md)：固定字段、压缩与校验、标签、私有仓库权限、分支和PR。
+- [数据贡献协议](docs/DATA_CONTRIBUTION.md)：固定字段、压缩与校验、标签、公开分享范围、fork和PR。
 - [玩家经验反馈](docs/PLAYER_FEEDBACK.md)：用年月/游戏秒连接观察、推测、经验、反例。
 - `data/submissions/`：只放验证过的贡献包，不放整份 captures 或研究原始文件。
 - `scripts/build_catalog.py`：构建后续统一处理的可复算目录索引。
