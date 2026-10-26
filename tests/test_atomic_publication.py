@@ -53,10 +53,19 @@ class AtomicPublicationTests(unittest.TestCase):
             self.assertGreaterEqual(replace.call_count,2)
             self.assertLessEqual(replace.call_count,10)
 
-    def run_optional_publication_failure(self, *, staging_error=None, final_error=None, final_replace_error=False):
+    def run_optional_publication_failure(self, *, staging_error=None, final_error=None,
+                                         final_replace_error=False, aliased_output=False):
         original_replace=Path.replace;original_write_text=Path.write_text;original_open=Path.open
         with tempfile.TemporaryDirectory() as folder:
-            output=Path(folder)/'synthetic-capture'
+            requested_output=Path(folder)/'synthetic-capture'
+            if aliased_output:
+                # Exercise another spelling of the same destination without
+                # symlinks or elevated permissions. CI TEMP can likewise use
+                # an 8.3 alias while main resolves its output to the long path.
+                alias_parent=Path(folder)/'existing-alias-parent'
+                alias_parent.mkdir()
+                requested_output=alias_parent/'..'/'synthetic-capture'
+            output=requested_output.resolve()
             connection=SimpleNamespace(generation=1,close=Mock(),
                 probe=SimpleNamespace(compatibility={},profile={'game_build':'synthetic'}))
             rows=[observation(10),observation(11,finished=True)]
@@ -128,9 +137,9 @@ class AtomicPublicationTests(unittest.TestCase):
                 stack.enter_context(contextlib.redirect_stdout(stdout))
                 if final_failure:
                     with self.assertRaisesRegex(OSError,'Required local capture metadata publication failed'):
-                        collect.main(['--out-dir',str(output),'--research-raw'])
+                        collect.main(['--out-dir',str(requested_output),'--research-raw'])
                 else:
-                    collect.main(['--out-dir',str(output),'--research-raw'])
+                    collect.main(['--out-dir',str(requested_output),'--research-raw'])
             self.assertEqual(len(samples),2)
             self.assertEqual(connection.close.call_count,1)
             streams={name:[json.loads(line) for line in (output/name).read_text(encoding='utf-8').splitlines()]
@@ -152,7 +161,9 @@ class AtomicPublicationTests(unittest.TestCase):
             self.assertIn('latest.json',locked_attempts);self.assertIn('manifest.json',locked_attempts)
 
     def test_optional_publication_locks_preserve_all_successful_streams_and_connection(self):
-        self.run_optional_publication_failure()
+        for aliased_output in (False,True):
+            with self.subTest(aliased_output=aliased_output):
+                self.run_optional_publication_failure(aliased_output=aliased_output)
 
     def test_optional_staging_permission_error_does_not_become_a_process_read_failure(self):
         self.run_optional_publication_failure(staging_error=PermissionError)
