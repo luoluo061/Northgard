@@ -1,6 +1,6 @@
 # 参与采集器改进
 
-先阅读[项目说明](README.md)及[安装流程](docs/INSTALL_WITH_CODEX.md)。当前是0.4.1-alpha实验版；3v3的离线测试不等于真实多人对局已验收。
+先阅读[项目说明](README.md)及[安装流程](docs/INSTALL_WITH_CODEX.md)。当前是0.5.0-alpha实验版；3v3的离线测试不等于真实多人对局已验收。
 
 - 想贡献一局数据：按[数据贡献说明](docs/DATA_CONTRIBUTION.md)完成本地脱敏、标签、审阅和校验，使用独立数据PR。公开上传范围以本人明确授权为准。
 - 想提供打法：按[玩家经验格式](docs/PLAYER_FEEDBACK.md)关联年月/月段、本人岗位、氏族和目标，区分观察、推测与建议。欢迎反例。

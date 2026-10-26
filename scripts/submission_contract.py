@@ -236,12 +236,58 @@ MAP = obj({**COMMON_COMPONENT,'policy_version':TOKEN,'visibility_policy':TOKEN,'
         'seed':nullable(NUM),'seed_source':nullable(TOKEN),'generation_seed':nullable(NUM),'generation_seed_source':nullable(TOKEN)}),
     'known_zones':arr(obj({'id':INT,'terrain_kind':{'enum':['Default','Water','Coast']},'position':POINT,
         'floor':NUM,'has_lake':BOOL,'known_geometric_neighbor_ids':arr(INT)}))})
+# Derived spatial annotations retain only the current discovered static graph
+# and references to entities already admitted by the own-player contract.
+BASE_RING_REASONS = [
+    'verified_player_observation_unavailable','known_graph_only_complete_rings_unverified',
+    'own_entity_references_unavailable','unverified_entity_reference_omitted',
+    'duplicate_own_entity_uid_omitted','own_completed_town_hall_ambiguous',
+    'own_completed_town_hall_unavailable','base_anchor_unverified_or_outside_current_clock',
+    'known_map_unavailable_or_unverified','unverified_map_zone_omitted','duplicate_map_zone_omitted',
+    'known_map_rows_incomplete','invalid_geometric_edges_omitted',
+    'duplicate_geometric_edges_deduplicated','asymmetric_geometric_edges_omitted',
+    'anchor_town_hall_not_currently_observed','anchor_zone_not_in_current_known_map']
+BASE_RING_UNKNOWNS = ['complete_base_neighborhood','current_visibility','traversability',
+                      'non_owned_zone_owner','original_spawn_zone']
+ZONE_ID = {'type':'integer','minimum':0,'maximum':2**31-1}
+ENTITY_UID = {'type':'integer','minimum':1,'maximum':2**53-1}
+BASE_RING_ANCHOR = obj({'selection':{'const':'first_observed_own_town_hall'},
+    'policy':{'const':'fixed_within_session'},'original_spawn_status':{'const':'unverified'},
+    'zone_id':nullable(ZONE_ID),'town_hall_uid':nullable(ENTITY_UID),
+    'town_hall_reference_status':{'enum':['observed_own_completed','not_currently_observed']},
+    'first_observed_game_time_seconds':NONNEG})
+BASE_RING_ANCHOR['required']=list(BASE_RING_ANCHOR['properties'])
+BASE_RING_ZONE = obj({'zone_id':ZONE_ID,'exploration':{'const':'known'},
+    'current_visibility':{'const':'unverified'},'ownership':{'enum':['self','unknown']},
+    'observed_graph_distance':nullable({'type':'integer','minimum':0,'maximum':2}),
+    'witness_path_zone_ids':arr(ZONE_ID,3),'own_unit_uids':arr(ENTITY_UID),
+    'own_building_uids':arr(ENTITY_UID),'map_observed_game_time_seconds':nullable(NONNEG),
+    'own_entities_observed_game_time_seconds':NONNEG})
+BASE_RING_ZONE['required']=list(BASE_RING_ZONE['properties'])
+BASE_NEIGHBORHOOD = obj({'schema_version':{'const':1},'policy_version':{'const':'base-neighborhood.v1'},
+    'status':{'enum':['unknown','partial']},'source':{'const':'derived_known_geometric_map_adjacency'},
+    'scope':{'const':'local_player_known_base_neighborhood'},
+    'adjacency_semantics':{'const':'geometric_map_cell_neighbors_not_traversability'},
+    'distance_semantics':{'const':'shortest_path_in_current_known_reciprocal_graph'},
+    'coverage':{'const':'incomplete'},
+    'coverage_semantics':{'const':'empty_rings_mean_not_observed_not_absent'},
+    'anchor':nullable(BASE_RING_ANCHOR),
+    **{key:arr(ZONE_ID) for key in ('ring0_zone_ids','ring1_zone_ids','ring2_zone_ids','known_unclassified_zone_ids')},
+    'zones':arr(BASE_RING_ZONE),'reason_codes':arr({'enum':BASE_RING_REASONS},len(BASE_RING_REASONS)),
+    'unknown_fields':arr({'enum':BASE_RING_UNKNOWNS},len(BASE_RING_UNKNOWNS)),
+    'continuity':{'enum':['current_sample_only','initial_baseline','baseline_after_read_error',
+        'capture_boundary_current_sample_only','clock_rollback_current_sample_only',
+        'sample_gap_current_sample_only','paused_clock_current_sample_only']}})
+BASE_NEIGHBORHOOD['required']=list(BASE_NEIGHBORHOOD['properties'])
+BASE_NEIGHBORHOOD['properties'].update({**{key:IDENTITY for key in ('session_key','capture_run_id','capture_segment_id')},
+    'local_player_entity_uid':ENTITY_UID,'game_time_seconds':NONNEG,'map_observed_game_time_seconds':nullable(NONNEG)})
 CAP_COMPONENTS = obj({'base':NONNEG,'silos':arr(obj({'building_uid':INT,'zone_id':INT,'is_upgraded':BOOL,'capacity_added':NONNEG}))})
 CACHE['properties']['stock_cap_components']=CAP_COMPONENTS
 ECONOMY['properties']['resource_limits']=obj({k:obj({'stock_cap':nullable(NUM),'stock_cap_verified':BOOL,
     'stock_cap_source':TOKEN,'stock_cap_status':TOKEN}) for k in RESOURCE_NAMES})
 RECORD_SCHEMAS['player-observations.ndjson.gz']['properties'].update({
-    'local_player_entity_uid':INT,'labor':LABOR,'population_growth':GROWTH,'operations':OPERATIONS,'map_observation':MAP})
+    'local_player_entity_uid':INT,'labor':LABOR,'population_growth':GROWTH,'operations':OPERATIONS,'map_observation':MAP,
+    'base_neighborhood':BASE_NEIGHBORHOOD})
 RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['game_context']=obj({
     **{k:TOKEN for k in ('mode_kind','game_type_kind','mode_variant_kind','biome')},
     'bifrost_data_present':BOOL,'editor_present':BOOL,'difficulty':NUM})
@@ -271,9 +317,14 @@ MATCH_CONTEXT['properties']['hlboot_sha256']={'const':'db0459d251879698420f58f68
 MATCH_CONTEXT['properties']['data_cdb_sha256']={'const':'88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3'}
 RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['match_context']=MATCH_CONTEXT
 RECORD_SCHEMAS['health.ndjson.gz']['properties'].update({
-    'match_context_status':nullable(TOKEN),'native_mode_kind':nullable(TOKEN),'native_mode_variant':nullable(TOKEN),
+    'match_context_status':nullable(TOKEN),'base_neighborhood_status':nullable({'enum':['unknown','partial']}),
+    'native_mode_kind':nullable(TOKEN),'native_mode_variant':nullable(TOKEN),
     'capture_validation_stage':{'enum':['experimental_multiplayer_unverified','experimental_singleplayer_unverified','native_mode_unverified']},
     'contributor_link_status':TOKEN})
+RECORD_SCHEMAS['health.ndjson.gz']['properties']['component_diagnostics']['properties']['base_neighborhood']=obj({
+    'source_status':TOKEN,'projection_status':TOKEN,'error_type':TOKEN,
+    'source_reason_codes':arr(TOKEN,100),'projection_reason_codes':arr(TOKEN,100),'read_guard_issues':arr(TOKEN,100)},
+    ('source_status','projection_status'))
 RECORD_SCHEMAS['actions.ndjson.gz']['properties']['labor_transitions']=arr(TRANSITION,10000)
 
 METADATA = obj({'consent_to_share':{'const':True}, 'data_source':{'enum':['own_human_game']},

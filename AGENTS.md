@@ -1,6 +1,6 @@
 # Instructions for Codex and other coding assistants
 
-This is an experimental, read-only Northgard own-player telemetry collector, not an automatic player. Current work targets **0.4.1-alpha preparation**, including experimental 3v3 own-player capture and independently contributed perspectives. Read `README.md`, `docs/INSTALL_WITH_CODEX.md`, `docs/GAME_DATA_GUIDE.zh-CN.md`, and `docs/MULTIPLAYER_3V3.md` before installing or explaining a capture. Use `docs/VALIDATION_STATUS.md` for actual validation status; never invent live passes.
+This is an experimental, read-only Northgard own-player telemetry collector, not an automatic player. Current work targets **0.5.0-alpha preparation**, including discovered base neighborhoods, experimental 3v3 own-player capture and independently contributed perspectives. Read `README.md`, `docs/INSTALL_WITH_CODEX.md`, `docs/GAME_DATA_GUIDE.zh-CN.md`, and `docs/MULTIPLAYER_3V3.md` before installing or explaining a capture. Use `docs/VALIDATION_STATUS.md` for actual validation status; never invent live passes.
 
 ## Install and record within the user's request
 
@@ -15,6 +15,7 @@ This is an experimental, read-only Northgard own-player telemetry collector, not
 
 - Capture `state.me`, own units and own-zone buildings only. Do not expand scope to allies or enemies because their objects happen to be locally accessible. Do not export rosters, player names, account identifiers, chats or other players' economics.
 - Anonymized native mode/team counts are context, not a roster. Slots can include AI. A known tile can come from shared vision; its discovery source is unresolved. Never label every newly known tile as the local scout's action.
+- `base_neighborhood` uses only this frame's known reciprocal geometric graph. Keep the first uniquely observed completed own TownHall as the session anchor, not the newest colony or Euclidean center. Never cache a past graph to fill errors, label unknown tiles as absent, or treat unclassified known zones as proven third-ring tiles. Base/resource completeness, current visibility and traversability remain unverified; see `docs/BASE_NEIGHBORHOOD.md`.
 - Each willing participant installs and records independently. `python scripts/create_match_kit.py --output <new directory>` creates a shared UUID and six A/B seat templates/instructions; it does not contact anyone, record, upload, or obtain consent. Collecting only the three willing teammates is valid; enemies need not install.
 - Recording flags are `--shared-match-id <UUID> --declared-format 3v3 --team-label A --player-slot 1`. Use the generated command for the assigned seat. These tags are declarations and cannot override native mode evidence.
 - Optional metadata `match_link` has only `shared_match_id`, `declared_format`, `team_label`, `player_slot`. Use the same lowercase UUIDv4 for the real match. A/B and slots 1–3 are agreed labels, independent of native team ordinal or player IDs.

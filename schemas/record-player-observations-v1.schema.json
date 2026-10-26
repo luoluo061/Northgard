@@ -3,6 +3,345 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "base_neighborhood": {
+      "additionalProperties": false,
+      "properties": {
+        "adjacency_semantics": {
+          "const": "geometric_map_cell_neighbors_not_traversability"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "first_observed_game_time_seconds": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "original_spawn_status": {
+                  "const": "unverified"
+                },
+                "policy": {
+                  "const": "fixed_within_session"
+                },
+                "selection": {
+                  "const": "first_observed_own_town_hall"
+                },
+                "town_hall_reference_status": {
+                  "enum": [
+                    "observed_own_completed",
+                    "not_currently_observed"
+                  ]
+                },
+                "town_hall_uid": {
+                  "anyOf": [
+                    {
+                      "maximum": 9007199254740991,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "zone_id": {
+                  "anyOf": [
+                    {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "selection",
+                "policy",
+                "original_spawn_status",
+                "zone_id",
+                "town_hall_uid",
+                "town_hall_reference_status",
+                "first_observed_game_time_seconds"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capture_run_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "capture_segment_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "continuity": {
+          "enum": [
+            "current_sample_only",
+            "initial_baseline",
+            "baseline_after_read_error",
+            "capture_boundary_current_sample_only",
+            "clock_rollback_current_sample_only",
+            "sample_gap_current_sample_only",
+            "paused_clock_current_sample_only"
+          ]
+        },
+        "coverage": {
+          "const": "incomplete"
+        },
+        "coverage_semantics": {
+          "const": "empty_rings_mean_not_observed_not_absent"
+        },
+        "distance_semantics": {
+          "const": "shortest_path_in_current_known_reciprocal_graph"
+        },
+        "game_time_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "known_unclassified_zone_ids": {
+          "items": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        },
+        "local_player_entity_uid": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "map_observed_game_time_seconds": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_version": {
+          "const": "base-neighborhood.v1"
+        },
+        "reason_codes": {
+          "items": {
+            "enum": [
+              "verified_player_observation_unavailable",
+              "known_graph_only_complete_rings_unverified",
+              "own_entity_references_unavailable",
+              "unverified_entity_reference_omitted",
+              "duplicate_own_entity_uid_omitted",
+              "own_completed_town_hall_ambiguous",
+              "own_completed_town_hall_unavailable",
+              "base_anchor_unverified_or_outside_current_clock",
+              "known_map_unavailable_or_unverified",
+              "unverified_map_zone_omitted",
+              "duplicate_map_zone_omitted",
+              "known_map_rows_incomplete",
+              "invalid_geometric_edges_omitted",
+              "duplicate_geometric_edges_deduplicated",
+              "asymmetric_geometric_edges_omitted",
+              "anchor_town_hall_not_currently_observed",
+              "anchor_zone_not_in_current_known_map"
+            ]
+          },
+          "maxItems": 17,
+          "type": "array"
+        },
+        "ring0_zone_ids": {
+          "items": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        },
+        "ring1_zone_ids": {
+          "items": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        },
+        "ring2_zone_ids": {
+          "items": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "scope": {
+          "const": "local_player_known_base_neighborhood"
+        },
+        "session_key": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "source": {
+          "const": "derived_known_geometric_map_adjacency"
+        },
+        "status": {
+          "enum": [
+            "unknown",
+            "partial"
+          ]
+        },
+        "unknown_fields": {
+          "items": {
+            "enum": [
+              "complete_base_neighborhood",
+              "current_visibility",
+              "traversability",
+              "non_owned_zone_owner",
+              "original_spawn_zone"
+            ]
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "zones": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "current_visibility": {
+                "const": "unverified"
+              },
+              "exploration": {
+                "const": "known"
+              },
+              "map_observed_game_time_seconds": {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observed_graph_distance": {
+                "anyOf": [
+                  {
+                    "maximum": 2,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "own_building_uids": {
+                "items": {
+                  "maximum": 9007199254740991,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "type": "array"
+              },
+              "own_entities_observed_game_time_seconds": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "number"
+              },
+              "own_unit_uids": {
+                "items": {
+                  "maximum": 9007199254740991,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "maxItems": 10000,
+                "type": "array"
+              },
+              "ownership": {
+                "enum": [
+                  "self",
+                  "unknown"
+                ]
+              },
+              "witness_path_zone_ids": {
+                "items": {
+                  "maximum": 2147483647,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "type": "array"
+              },
+              "zone_id": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "zone_id",
+              "exploration",
+              "current_visibility",
+              "ownership",
+              "observed_graph_distance",
+              "witness_path_zone_ids",
+              "own_unit_uids",
+              "own_building_uids",
+              "map_observed_game_time_seconds",
+              "own_entities_observed_game_time_seconds"
+            ],
+            "type": "object"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "policy_version",
+        "status",
+        "source",
+        "scope",
+        "adjacency_semantics",
+        "distance_semantics",
+        "coverage",
+        "coverage_semantics",
+        "anchor",
+        "ring0_zone_ids",
+        "ring1_zone_ids",
+        "ring2_zone_ids",
+        "known_unclassified_zone_ids",
+        "zones",
+        "reason_codes",
+        "unknown_fields",
+        "continuity"
+      ],
+      "type": "object"
+    },
     "buildings": {
       "items": {
         "additionalProperties": false,

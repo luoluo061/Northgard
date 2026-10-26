@@ -3,6 +3,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "base_neighborhood_status": {
+      "anyOf": [
+        {
+          "enum": [
+            "unknown",
+            "partial"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "capture_run_id": {
       "maxLength": 24,
       "pattern": "^[a-f0-9]{24}$",
@@ -28,6 +41,58 @@
     "component_diagnostics": {
       "additionalProperties": false,
       "properties": {
+        "base_neighborhood": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
         "economy": {
           "additionalProperties": false,
           "properties": {

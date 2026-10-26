@@ -26,13 +26,15 @@ from operation_ledger import OperationLedger
 from situation_timeline import SituationTracker
 from labor_transitions import LaborTransitionTracker
 from growth_projection import GrowthProgressTracker
+from base_rings import BaseRingTracker
 from local_rules import verify_generated_rules
 from create_match_kit import shared_uuid
 
-VERSION = '0.4.1-alpha'
+VERSION = '0.5.0-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
-HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth', 'match_context')
+HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth',
+                     'match_context', 'base_neighborhood')
 _HEALTH_CODE = re.compile(r'[A-Za-z][A-Za-z0-9_.:-]{0,127}\Z')
 
 
@@ -72,6 +74,12 @@ def component_diagnostics(raw, projected):
                      if type(source.get('reason_codes', [])) is list else [],
                  'projection_reason_codes': codes(target.get('reason_codes')),
                  'read_guard_issues': codes(source.get('read_guard_issues'))}
+        if name == 'base_neighborhood':
+            # Rings are computed from this frame's sanitized map, never read
+            # from an additional game object or inferred from the previous map.
+            entry['source_status'] = 'derived'
+            entry['source_reason_codes'] = []
+            entry['read_guard_issues'] = []
         if code(source.get('error_type')):
             entry['error_type'] = code(source['error_type'])
         result[name] = entry
@@ -284,7 +292,8 @@ def main(argv=None):
                                 'Growth bonus and exact birth eligibility remain incomplete; interval ETA is conditional.',
                                 'Multiplayer capture is experimental; release-level short/full 3v3 validation has not run.',
                                 'Shared UUID and A/B seats are participant declarations, not verified cross-client identity.',
-                                'Allied effects, trades and shared-vision discovery provenance are not fully attributed.']}
+                                'Allied effects, trades and shared-vision discovery provenance are not fully attributed.',
+                                'Base rings use discovered geometric adjacency only; incomplete rings do not establish absent tiles.']}
     atomic_json(output / 'manifest.json', manifest)
     atomic_json(output / 'latest.json', {'status': 'waiting_for_game', 'captured_at': now()})
     handles = {name: (output / name).open('x', encoding='utf-8') for name in SHARE_FILES if name.endswith('.ndjson')}
@@ -295,6 +304,7 @@ def main(argv=None):
     situations = SituationTracker()
     labor_transitions = LaborTransitionTracker()
     growth_progress = GrowthProgressTracker()
+    base_rings = BaseRingTracker()
     counts = Counter()
     component_counts = Counter()
     sequence = 0
@@ -326,6 +336,7 @@ def main(argv=None):
                 if status == 'ok':
                     diagnostics = mode_diagnostics(projected, declared)
                     projected['sequence'] = sequence
+                    projected['base_neighborhood'] = base_rings.update(projected)
                     observed_growth = growth_progress.update(projected)
                     if 'population_growth' in projected:
                         projected['population_growth']['observed_progress_intervals'] = observed_growth
@@ -359,12 +370,21 @@ def main(argv=None):
                         unit['kind'] for unit in projected.get('units', []) if 'kind' in unit))
                     manifest['last_own_zone_object_kind_counts'] = dict(Counter(
                         item['kind'] for item in projected.get('buildings', []) if 'kind' in item))
+                    neighborhood = projected['base_neighborhood']
+                    manifest['last_base_neighborhood'] = {
+                        'status': neighborhood['status'],
+                        'anchor_zone_id': (neighborhood.get('anchor') or {}).get('zone_id'),
+                        'known_ring1_count': len(neighborhood['ring1_zone_ids']),
+                        'known_ring2_count': len(neighborhood['ring2_zone_ids']),
+                        'known_unclassified_count': len(neighborhood['known_unclassified_zone_ids']),
+                        'coverage': neighborhood['coverage']}
                     manifest['last_session_key'] = raw.get('session_key')
                     manifest['last_capture_run_id'] = raw.get('capture_run_id')
                     manifest['last_capture_segment_id'] = raw.get('capture_segment_id')
                     for name, state_value in (
                             ('operations', projected.get('operations', {}).get('status', 'missing')),
                             ('map', projected.get('map_observation', {}).get('status', 'missing')),
+                            ('base_neighborhood', projected['base_neighborhood']['status']),
                             ('match_context', projected.get('match_context', {}).get('status', 'missing')),
                             ('labor', projected.get('labor', {}).get('status', 'missing')),
                             ('population_growth', projected.get('population_growth', {}).get('status', 'missing')),
@@ -382,6 +402,7 @@ def main(argv=None):
                     interrupted = labor_transitions.update({'status': status})
                     write_transition_tails(handles['actions.ndjson'],status,interrupted)
                     growth_progress.update({'status': status})
+                    base_rings.update({'status': status})
                     write_line(handles['economic-snapshots.ndjson'], {'status': status, 'sequence': sequence, 'captured_at': now()})
                     atomic_json(output / 'latest.json', {'status': status, 'captured_at': now()})
                 health = {'sequence': sequence, 'captured_at': now(), 'status': status,
@@ -389,6 +410,7 @@ def main(argv=None):
                           'economy_status': raw.get('economy', {}).get('status'),
                           'operations_status': projected.get('operations', {}).get('status'),
                           'map_status': projected.get('map_observation', {}).get('status'),
+                          'base_neighborhood_status': projected.get('base_neighborhood', {}).get('status'),
                           'match_context_status': projected.get('match_context', {}).get('status'),
                           'native_mode_kind': projected.get('game_context', {}).get('mode_kind'),
                           'native_mode_variant': projected.get('game_context', {}).get('mode_variant_kind'),
@@ -422,6 +444,7 @@ def main(argv=None):
                 interrupted = labor_transitions.update({'status': status})
                 write_transition_tails(handles['actions.ndjson'],status,interrupted)
                 growth_progress.update({'status': status})
+                base_rings.update({'status': status})
                 write_line(handles['economic-snapshots.ndjson'], health)
                 atomic_json(output / 'latest.json', health)
                 connection.close()

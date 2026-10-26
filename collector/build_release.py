@@ -17,9 +17,15 @@ import sys
 import zipfile
 
 
-VERSION = "0.4.1"
+VERSION = "0.5.0"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'companion/core/base_rings.py',
+    'companion/tests/test_base_rings.py',
+    'tests/test_base_ring_collector.py',
+    'tests/test_base_neighborhood_submission.py',
+    'docs/BASE_NEIGHBORHOOD.md',
+    'research/telemetry/test_discovered_tile_scope.py',
     'research/telemetry/test_map_wrappers.py',
     'tests/test_component_diagnostics.py',
     'research/telemetry/match_context.py',

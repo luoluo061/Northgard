@@ -99,6 +99,96 @@ def objects(h,p,limit=10000):
         raise LayoutError('Unsupported array wrapper: '+name)
     raise LayoutError('Array wrapper nesting exceeded')
 
+
+def read_discovered_tiles(h, state, me, discovered):
+    """Read own tile contents; every other discovered tile is an ID only.
+
+    Discovery is not current visibility. In particular, an entry in the local
+    discovered set never permits reading a non-owned zone's building array.
+    All checks use stored fields; no native getters or game functions run.
+    """
+    if (type(discovered) is not list or len(discovered) > 10000
+            or any(type(zid) is not int or not 0 <= zid < 2**31 for zid in discovered)
+            or len(discovered) != len(set(discovered))):
+        raise LayoutError('Invalid discovered zone IDs')
+    wanted = set(discovered)
+    if h.field(state, 'me') != me:
+        raise LayoutError('Discovered tile scope is not the local player')
+    world = h.field(me, 'world')
+    if not world or h.object_type(world).name != 'ent.player.WorldComponent':
+        raise LayoutError('Expected local WorldComponent for discovered tiles')
+
+    def check_scope():
+        if (h.field(state, 'me') != me or h.field(me, 'world') != world
+                or h.int_array(h.field(world, 'discoveredIds')) != discovered):
+            raise LayoutError('Discovered tile knowledge scope changed')
+
+    check_scope()
+    zone_array = h.field(state, 'zones')
+    zone_pointers = objects(h, zone_array)
+    if len(zone_pointers) != len(set(zone_pointers)):
+        raise LayoutError('Duplicate zone object in current map')
+    tiles, seen, owners, own_arrays = [], set(), [], []
+    for zone in zone_pointers:
+        if h.object_type(zone).name != 'ent.Zone':
+            raise LayoutError('Unexpected zone type in current map')
+        zid = h.field(zone, 'id')
+        if type(zid) is not int or not 0 <= zid < 2**31:
+            raise LayoutError('Invalid map zone ID')
+        if zid not in wanted:
+            continue
+        if zid in seen:
+            raise LayoutError('Duplicate discovered zone ID in current map')
+        seen.add(zid)
+        owner = h.field(zone, 'owner')
+        owners.append((zone, zid, owner))
+        tile = {'id': zid, 'knowledge_scope': 'discovered_id_only',
+                'current_visibility': 'unverified'}
+        if owner == me:
+            capacity = h.field(zone, 'maxBuildings')
+            if type(capacity) is not int or not 0 <= capacity <= 1000:
+                raise LayoutError('Invalid own-zone building capacity')
+            if h.field(zone, 'owner') != me:
+                raise LayoutError('Own-zone ownership changed before contents read')
+            building_array = h.field(zone, 'buildings')
+            building_pointers = objects(h, building_array)
+            if len(building_pointers) != len(set(building_pointers)):
+                raise LayoutError('Duplicate own-zone building object')
+            kinds = []
+            for building in building_pointers:
+                # Check the stored parent pointer before reading its kind.
+                if h.field(zone, 'owner') != me or h.field(building, 'zone') != zone:
+                    raise LayoutError('Building is not in the expected own zone')
+                kind = string(h, h.field(building, 'kind'))
+                if type(kind) is not str or not 0 < len(kind) <= 128:
+                    raise LayoutError('Invalid own-zone building kind')
+                if h.field(building, 'zone') != zone or h.field(zone, 'owner') != me:
+                    raise LayoutError('Own building scope changed during read')
+                kinds.append(kind)
+            own_arrays.append((zone, building_array, building_pointers))
+            tile = {'id': zid, 'knowledge_scope': 'owned_zone', 'owner': 'self',
+                    'base_building_slots': capacity, 'buildings': kinds}
+        tiles.append(tile)
+    if seen != wanted:
+        raise LayoutError('Discovered IDs missing from current map')
+    check_scope()
+    if (h.field(state, 'zones') != zone_array
+            or objects(h, zone_array) != zone_pointers):
+        raise LayoutError('Map zone array changed during discovered tile read')
+    for zone, zid, owner in owners:
+        final_id = h.field(zone, 'id')
+        if type(final_id) is not int or final_id != zid or h.field(zone, 'owner') != owner:
+            raise LayoutError('Discovered zone identity or ownership changed')
+    for zone, array, pointers in own_arrays:
+        if (h.field(zone, 'buildings') != array or objects(h, array) != pointers
+                or any(h.field(building, 'zone') != zone for building in pointers)):
+            raise LayoutError('Own-zone building membership changed')
+    check_scope()
+    if any(h.field(zone, 'owner') != owner for zone, _, owner in owners):
+        raise LayoutError('Discovered zone ownership changed at read end')
+    return tiles
+
+
 class Probe:
     def __init__(self,r,refresh=False):
         self.r=r;self.h=HLReader(r.read)
@@ -142,21 +232,7 @@ class Probe:
         for key in ('Stone','Iron','Lore'):
             stocks[key]=raw.get(key,0.0)
         discovered=h.int_array(h.field(world,'discoveredIds'))
-        if len(discovered)!=len(set(discovered)):raise LayoutError('Duplicate discovered IDs')
-        wanted=set(discovered);tiles=[]
-        for zone in objects(h,h.field(state,'zones')):
-            zid=h.field(zone,'id')
-            if zid not in wanted:continue
-            owner=h.field(zone,'owner')
-            buildings=[]
-            try:
-                for b in objects(h,h.field(zone,'buildings')):
-                    buildings.append(string(h,h.field(b,'kind')))
-            except KeyError:pass
-            tiles.append({'id':zid,'owner':'self' if owner==me else ('other' if owner else 'unowned'),
-                          'base_building_slots':h.field(zone,'maxBuildings'),
-                          'buildings':buildings})
-        if {x['id'] for x in tiles}!=wanted:raise LayoutError('Discovered IDs missing from current map')
+        tiles=read_discovered_tiles(h,state,me,discovered)
         population=None;population_error=None
         try:
             from population_read import read_population

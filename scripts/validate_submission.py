@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter,deque
 import gzip
 import io
 import json
@@ -12,7 +13,7 @@ import struct
 import zipfile
 import zlib
 
-from submission_contract import (DATA_FILES,FILES,MANIFEST_SCHEMA,MATCH_CONTEXT,MAX_COMPRESSED,MAX_EXPANDED,
+from submission_contract import (BASE_RING_UNKNOWNS,DATA_FILES,FILES,MANIFEST_SCHEMA,MATCH_CONTEXT,MAX_COMPRESSED,MAX_EXPANDED,
     MAX_RECORD,MAX_TOTAL_EXPANDED,RECORD_SCHEMAS,SUBMISSION_SCHEMA,VARIANT_LAYOUTS,SubmissionError,
     clock,digest,loads,mode_facts,observe_mode,resolve_mode,team_groups,validate)
 
@@ -185,6 +186,8 @@ def validate_observation_scope(row):
             if component.get('map_identity',{}).get('map_instance_id')!=row.get('session_key'):
                 raise SubmissionError('Map instance differs from parent')
             for zone in component.get('known_zones',[]):
+                if not {'id','known_geometric_neighbor_ids'}.issubset(zone):
+                    raise SubmissionError('Map cell is missing its identifier or adjacency')
                 if zone['id'] not in known or not set(zone['known_geometric_neighbor_ids']).issubset(known):
                     raise SubmissionError('Map cell outside historical knowledge')
         elif component_name=='operations':
@@ -196,6 +199,182 @@ def validate_observation_scope(row):
                     raise SubmissionError('Cost record outside own building scope')
         elif component_name=='match_context':
             validate_match_context(component,row)
+
+
+def _base_empty(reason):
+    return {'schema_version':1,'policy_version':'base-neighborhood.v1','status':'unknown',
+        'source':'derived_known_geometric_map_adjacency','scope':'local_player_known_base_neighborhood',
+        'adjacency_semantics':'geometric_map_cell_neighbors_not_traversability',
+        'distance_semantics':'shortest_path_in_current_known_reciprocal_graph','coverage':'incomplete',
+        'coverage_semantics':'empty_rings_mean_not_observed_not_absent','anchor':None,
+        'ring0_zone_ids':[],'ring1_zone_ids':[],'ring2_zone_ids':[],
+        'known_unclassified_zone_ids':[],'zones':[],'reason_codes':[reason],
+        'unknown_fields':list(BASE_RING_UNKNOWNS),'continuity':'current_sample_only'}
+
+
+def _base_entities(row):
+    """Recheck source references independently of the candidate collector."""
+    known=set(row['discovered_zone_ids']);owned=set(row['owned_zone_ids'])
+    entities={'units':[],'buildings':[]};reasons=set();candidates=[]
+    for field in entities:
+        for entity in row[field]:
+            if (not 0<entity['uid']<2**53 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_.]{0,95}',entity['kind'])
+                    or type(entity.get('zone_id')) is not int or not 0<=entity['zone_id']<2**31
+                    or entity['zone_id'] not in known
+                    or field=='buildings' and entity['zone_id'] not in owned):
+                reasons.add('unverified_entity_reference_omitted')
+            else:
+                candidates.append((field,entity))
+    counts=Counter(entity['uid'] for _,entity in candidates)
+    for field,entity in candidates:
+        if counts[entity['uid']]!=1:
+            reasons.add('duplicate_own_entity_uid_omitted')
+        else:
+            entities[field].append(entity)
+    return entities,reasons
+
+
+def _base_graph(row):
+    component=row.get('map_observation',{});keys=('session_key','capture_run_id','capture_segment_id')
+    if (component.get('schema_version')!=1 or component.get('status')!='ok'
+            or component.get('policy_version')!='player-map.v1'
+            or component.get('source')!='native_discovered_static_map_read_only'
+            or component.get('scope')!='local_player_discovered_static_cells'
+            or component.get('adjacency_semantics')!='geometric_map_cell_neighbors_not_traversability'
+            or component.get('hlboot_sha256')!='db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76'
+            or component.get('data_cdb_sha256')!='88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3'
+            or any(component.get(key)!=row[key] for key in keys)
+            or component.get('local_player_entity_uid')!=row['local_player_entity_uid']
+            or component.get('map_identity',{}).get('map_instance_id')!=row['session_key']
+            or component.get('game_time_seconds') is None
+            or not -.025<=row['game_time_seconds']-component['game_time_seconds']<=5
+            or type(component.get('known_zones')) is not list):
+        return {},{},None,{'known_map_unavailable_or_unverified'}
+    known=set(row['discovered_zone_ids']);rows={};duplicates=set();reasons=set()
+    for zone in component['known_zones']:
+        zid=zone.get('id')
+        if type(zid) is not int or not 0<=zid<2**31 or zid not in known:
+            reasons.add('unverified_map_zone_omitted')
+        elif zid in rows:
+            duplicates.add(zid);reasons.add('duplicate_map_zone_omitted')
+        else:
+            rows[zid]=zone
+    for zid in duplicates:
+        del rows[zid]
+    if set(rows)!=known:
+        reasons.add('known_map_rows_incomplete')
+    directed={zid:set() for zid in rows}
+    for zid,zone in rows.items():
+        neighbors=zone.get('known_geometric_neighbor_ids')
+        if type(neighbors) is not list:
+            reasons.add('invalid_geometric_edges_omitted')
+            continue
+        for neighbor in neighbors:
+            if not 0<=neighbor<2**31 or neighbor==zid or neighbor not in rows:
+                reasons.add('invalid_geometric_edges_omitted')
+            else:
+                if neighbor in directed[zid]:
+                    reasons.add('duplicate_geometric_edges_deduplicated')
+                directed[zid].add(neighbor)
+    graph={zid:set() for zid in rows}
+    for zid,neighbors in directed.items():
+        for neighbor in neighbors:
+            if zid in directed[neighbor]:
+                graph[zid].add(neighbor)
+            else:
+                reasons.add('asymmetric_geometric_edges_omitted')
+    return rows,graph,component['game_time_seconds'],reasons
+
+
+class BaseNeighborhoodValidation:
+    """Frozen semantic check; never imports or trusts collector derivation code.
+
+    Only an observed unique own completed TownHall establishes the session
+    anchor. Historical anchors retain no graph or entity payload. The optional
+    component can be absent from legacy frames; current data is always checked
+    against the same containing PlayerObservation.
+    """
+    def __init__(self):
+        self.context=None
+        self.anchor=None
+
+    def check(self,row):
+        if 'base_neighborhood' not in row:
+            return
+        component=row['base_neighborhood']
+        # Parent quality diagnostics are intentionally excluded from shared
+        # records. A data-free unavailable result makes no spatial claim.
+        unavailable=_base_empty('verified_player_observation_unavailable')
+        if component==unavailable:
+            return
+        if (row.get('status')!='ok' or row.get('schema_version')!=1
+                or row.get('policy_version')!='player-observation.v1'
+                or not set(row['owned_zone_ids']).issubset(row['discovered_zone_ids'])
+                or any(not 0<=zid<2**31 for key in ('owned_zone_ids','discovered_zone_ids') for zid in row[key])):
+            raise SubmissionError('Base neighborhood requires verified own-player provenance')
+        context=(row['session_key'],row['local_player_entity_uid'])
+        if context!=self.context:
+            self.context=context;self.anchor=None
+        entities,reasons=_base_entities(row)
+        if self.anchor is None:
+            halls=[entity for entity in entities['buildings']
+                   if entity['kind']=='TownHall' and entity.get('is_construction') is False]
+            if len(halls)==1:
+                self.anchor={**{key:halls[0][key] for key in ('zone_id','uid')},
+                             'first_time':row['game_time_seconds']}
+            else:
+                reasons.add('own_completed_town_hall_ambiguous' if halls else 'own_completed_town_hall_unavailable')
+        anchor=self.anchor
+        if anchor is not None and anchor['first_time']>row['game_time_seconds']:
+            anchor=None;reasons.add('base_anchor_unverified_or_outside_current_clock')
+        rows,graph,map_when,map_reasons=_base_graph(row);reasons|=map_reasons
+        expected=_base_empty('known_graph_only_complete_rings_unverified')
+        expected.update({key:row[key] for key in ('session_key','capture_run_id','capture_segment_id',
+                                                 'local_player_entity_uid','game_time_seconds')})
+        expected['map_observed_game_time_seconds']=map_when
+        paths={}
+        if anchor is not None:
+            zid=anchor['zone_id']
+            hall=next((entity for entity in entities['buildings'] if entity['uid']==anchor['uid']
+                       and entity['kind']=='TownHall' and entity['zone_id']==zid
+                       and entity.get('is_construction') is False),None)
+            expected['anchor']={'selection':'first_observed_own_town_hall','policy':'fixed_within_session',
+                'original_spawn_status':'unverified','zone_id':zid if zid in rows else None,
+                'town_hall_uid':hall['uid'] if hall else None,
+                'town_hall_reference_status':'observed_own_completed' if hall else 'not_currently_observed',
+                'first_observed_game_time_seconds':anchor['first_time']}
+            if hall is None:
+                reasons.add('anchor_town_hall_not_currently_observed')
+            if zid not in rows:
+                reasons.add('anchor_zone_not_in_current_known_map')
+            else:
+                paths[zid]=[zid];queue=deque([zid]);expected['status']='partial'
+                while queue:
+                    current=queue.popleft()
+                    if len(paths[current])==3:
+                        continue
+                    for neighbor in sorted(graph[current]):
+                        if neighbor not in paths:
+                            paths[neighbor]=paths[current]+[neighbor];queue.append(neighbor)
+        for ring in range(3):
+            expected['ring%d_zone_ids'%ring]=sorted(zid for zid,path in paths.items() if len(path)-1==ring)
+        expected['known_unclassified_zone_ids']=sorted(set(rows)-paths.keys())
+        for zid in sorted(rows):
+            path=paths.get(zid)
+            expected['zones'].append({'zone_id':zid,'exploration':'known','current_visibility':'unverified',
+                'ownership':'self' if zid in row['owned_zone_ids'] else 'unknown',
+                'observed_graph_distance':len(path)-1 if path else None,
+                'witness_path_zone_ids':path if path else [],
+                'own_unit_uids':sorted(entity['uid'] for entity in entities['units'] if entity['zone_id']==zid),
+                'own_building_uids':sorted(entity['uid'] for entity in entities['buildings'] if entity['zone_id']==zid),
+                'map_observed_game_time_seconds':map_when,
+                'own_entities_observed_game_time_seconds':row['game_time_seconds']})
+        expected['reason_codes']=sorted(set(expected['reason_codes'])|reasons)
+        # Continuity is a diagnostic label; it never permits carrying forward
+        # geometry, ownership, or entity references from a different sample.
+        expected['continuity']=component['continuity']
+        if component!=expected:
+            raise SubmissionError('Base neighborhood differs from same-frame known map/own references or fixed session anchor')
 
 
 def validate_match_context(component,row):
@@ -287,6 +466,7 @@ def validate_submission(path):
     if len(file_entries)!=6 or set(file_entries)!=set(DATA_FILES)|{'capture-manifest.json','SUMMARY.md'}:
         raise SubmissionError('Invalid file manifest')
     total=0; player_times=[];observed_clans=set();observed=mode_facts();last_times={};histories={}
+    base_neighborhoods=BaseNeighborhoodValidation()
     for name in (*DATA_FILES,'capture-manifest.json','SUMMARY.md'):
         entry=file_entries[name]
         raw=payload[name]
@@ -315,6 +495,7 @@ def validate_submission(path):
                                 raise SubmissionError('Economic cache identity differs from containing sample')
                         if name.startswith('player-'):
                             validate_observation_scope(row)
+                            base_neighborhoods.check(row)
                             if row.get('status')=='ok':
                                 match_context=row.get('match_context',{})
                                 if match_context.get('status') in ('ok','partial'):
