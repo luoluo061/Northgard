@@ -16,6 +16,7 @@ sys.path.insert(0, str(HERE.parent / 'runtime'))
 from live_reader import objects, string
 from runtime_types import LayoutError
 from resource_caps import VERIFIED_HASH, VERIFIED_CDB_HASH
+from runtime_decode import checked_map_backing
 
 SOURCE = 'native_own_growth_inputs_read_only'
 IDENTITIES = ('session_key', 'capture_run_id', 'capture_segment_id')
@@ -51,7 +52,8 @@ def capture_growth(h, me, state, owned_building_pointers=(), *, profile, identit
     """Return stored progress, happiness, gates and independently missing inputs.
 
     ``owned_building_pointers`` contains ``(pointer, zone_id)`` pairs, as in
-    capture_operations. Ownership and TownHall.player are independently checked.
+    capture_operations. Own-zone ownership is checked independently of the
+    nullable TownHall.player reference, which must match when populated.
     No enemy objects, account names, memory addresses, getters or injected code
     enter the output. Build/data hashes are mandatory and mismatches fail closed.
     """
@@ -123,7 +125,10 @@ def capture_growth(h, me, state, owned_building_pointers=(), *, profile, identit
             raise LayoutError('Own growth building scope changed during capture')
         if h.object_type(building).name != 'ent.b.TownHall':
             continue
-        if h.field(building, 'player') != me:
+        # The stored TownHall.player reference can be null during live play.
+        # Zone ownership is primary; a populated foreign reference is rejected.
+        player_cache = h.field(building, 'player')
+        if player_cache not in (0, me):
             raise LayoutError('TownHall is not bound to the local player')
         uid = _validate(h.field(building, '__uid'), 'integer')
         if uid in seen:
@@ -136,7 +141,7 @@ def capture_growth(h, me, state, owned_building_pointers=(), *, profile, identit
                 ('recruit_stack', 'recruitStack', 'nonnegative'),
                 ('enabled', 'enabled', 'bool')):
             optional(row, out, lambda field=field: h.field(building, field), kind)
-        watched.append((building, zone, uid, row['growth_progress']))
+        watched.append((building, zone, uid, row['growth_progress'], player_cache))
         result['town_halls'].append(row)
     result['town_halls'].sort(key=lambda row: row['uid'])
     bonus = result['bonus_inputs']
@@ -149,14 +154,16 @@ def capture_growth(h, me, state, owned_building_pointers=(), *, profile, identit
         proxy = h.field(tech, 'researchedTechs')
         if h.object_type(proxy).name != 'hxbit.MapData':
             raise LayoutError('Unexpected own growth tech map')
-        backing = h.field(proxy, 'map')
-        if h.object_type(backing).name != 'haxe.ds.StringMap':
-            raise LayoutError('Unexpected own growth tech backing map')
-        tech_keys = set(h.string_map(backing))
+        with checked_map_backing(h, proxy, 'haxe.ds.StringMap') as backing:
+            values = h.string_map(backing)
+            tech_keys = set(values)
+            fountain = h.field(tech, 'allFountainResearches')
+            special = bool(fountain and objects(h, fountain, limit=4096)) or bool(h.field(me, 'owl'))
+            if (h.string_map(backing) != values or h.field(me, 'tech') != tech
+                    or h.field(tech, 'researchedTechs') != proxy):
+                raise LayoutError('Own growth tech map changed while reading')
         bonus['normal_map_tech_presence'] = {key: key in tech_keys for key in GROWTH_TECHS}
-        fountain = h.field(tech, 'allFountainResearches')
-        bonus['special_tech_providers_present'] = bool(
-            fountain and objects(h, fountain, limit=4096)) or bool(h.field(me, 'owl'))
+        bonus['special_tech_providers_present'] = special
     except (OSError, ValueError, KeyError, TypeError):
         bonus['normal_map_tech_presence'] = None
         bonus['special_tech_providers_present'] = None
@@ -188,10 +195,15 @@ def capture_growth(h, me, state, owned_building_pointers=(), *, profile, identit
     if (initial_progress is not None
             and h.field(res, 'growth') != initial_progress):
         races.append('resource_growth_changed_during_read')
-    for building, zone, uid, progress in watched:
+    for building, zone, uid, progress, player_cache in watched:
         if (h.field(building, 'zone') != zone or h.field(zone, 'owner') != me
-                or h.field(building, 'player') != me or h.field(building, '__uid') != uid):
+                or h.field(building, '__uid') != uid):
             raise LayoutError('TownHall scope changed during capture')
+        cache_after = h.field(building, 'player')
+        if cache_after not in (0, me):
+            raise LayoutError('TownHall scope changed during capture')
+        if cache_after != player_cache:
+            races.append('town_hall_player_cache_changed_during_read')
         if progress is not None and h.field(building, 'growth') != progress:
             races.append('town_hall_growth_changed_during_read')
     if after < before:

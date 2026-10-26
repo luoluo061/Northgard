@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 import struct
 import sys
 import time
@@ -28,9 +29,11 @@ from growth_projection import GrowthProgressTracker
 from local_rules import verify_generated_rules
 from create_match_kit import shared_uuid
 
-VERSION = '0.4.0-alpha'
+VERSION = '0.4.1-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
+HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth', 'match_context')
+_HEALTH_CODE = re.compile(r'[A-Za-z][A-Za-z0-9_.:-]{0,127}\Z')
 
 
 def now():
@@ -46,6 +49,33 @@ def atomic_json(path, value):
 def write_line(handle, value):
     handle.write(json.dumps(value, ensure_ascii=False, allow_nan=False) + '\n')
     handle.flush()
+
+
+def component_diagnostics(raw, projected):
+    """Source failure and projection rejection are separate, data-free facts."""
+    def code(value):
+        return value if type(value) is str and _HEALTH_CODE.fullmatch(value) else None
+    def codes(values):
+        if type(values) is not list:
+            return []
+        return list(dict.fromkeys(item for item in (code(value) for value in values[:100]) if item))
+    result = {}
+    for name in HEALTH_COMPONENTS:
+        source = raw.get(name, {}) if type(raw) is dict else {}
+        target = projected.get(name, {}) if type(projected) is dict else {}
+        source = source if type(source) is dict else {}
+        target = target if type(target) is dict else {}
+        entry = {'source_status': code(source.get('status')) or 'missing',
+                 'projection_status': code(target.get('status')) or 'missing',
+                 'source_reason_codes': codes(source.get('reason_codes', []) +
+                     ([source['reason_code']] if type(source.get('reason_code')) is str else []))
+                     if type(source.get('reason_codes', [])) is list else [],
+                 'projection_reason_codes': codes(target.get('reason_codes')),
+                 'read_guard_issues': codes(source.get('read_guard_issues'))}
+        if code(source.get('error_type')):
+            entry['error_type'] = code(source['error_type'])
+        result[name] = entry
+    return result
 
 
 def transition_tail_records(status, transitions):
@@ -327,6 +357,8 @@ def main(argv=None):
                     manifest['last_own_unit_entity_count'] = len(projected.get('units', []))
                     manifest['last_own_unit_kind_counts'] = dict(Counter(
                         unit['kind'] for unit in projected.get('units', []) if 'kind' in unit))
+                    manifest['last_own_zone_object_kind_counts'] = dict(Counter(
+                        item['kind'] for item in projected.get('buildings', []) if 'kind' in item))
                     manifest['last_session_key'] = raw.get('session_key')
                     manifest['last_capture_run_id'] = raw.get('capture_run_id')
                     manifest['last_capture_segment_id'] = raw.get('capture_segment_id')
@@ -371,6 +403,7 @@ def main(argv=None):
                           'feast_quote_status': projected.get('operations', {}).get('feast_quote', {}).get('status'),
                           'observation_rejection_codes': projected.get('reason_codes', []),
                           'sample_span_game_seconds': raw.get('sample_span_game_seconds')}
+                health['component_diagnostics'] = component_diagnostics(raw, projected)
             except (ValueError, OSError, KeyError, struct.error, RuntimeError) as error:
                 status = 'collector_read_error'
                 # No raw exception text, process addresses or installation paths

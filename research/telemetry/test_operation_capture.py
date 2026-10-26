@@ -148,4 +148,62 @@ class IntMapTests(unittest.TestCase):
         with self.assertRaises(ValueError):oc._integer_map_pointers(self.heap(True),1)
 
 
+class WrappedOperationMapTests(unittest.TestCase):
+    def heap(self, virtual=True):
+        fields = {(1, 'tech'): 11, (1, 'owl'): 0,
+                  (11, 'allFountainResearches'): 0, (11, 'researchedTechs'): 12,
+                  (12, 'map'): 13 if virtual else 14, (14, 'h'): 1400,
+                  (2, 'colonizedPrice'): 22, (22, 'map'): 23 if virtual else 24,
+                  (24, 'h'): 2400}
+        types = {11: ('ent.player.TechComponent', 11), 12: ('hxbit.MapData', 11),
+                 13: ('virtual', 15), 14: ('haxe.ds.StringMap', 11),
+                 22: ('hxbit.MapData', 11), 23: ('virtual', 15), 24: ('haxe.ds.IntMap', 11)}
+        values = {'TrialFaith': True}
+        h = SimpleNamespace(field=lambda p,n: fields[p,n], ptr=lambda p: {21:14,31:24}[p],
+            object_type=lambda p: SimpleNamespace(name=types[p][0], kind=types[p][1]),
+            string_map=lambda p: dict(values))
+        return h, fields, types, values
+
+    def test_price_map_unwraps_but_only_decodes_known_zone_costs(self):
+        for virtual in (False, True):
+            with self.subTest(virtual=virtual):
+                h, _, _, _ = self.heap(virtual)
+                with patch.object(oc, '_integer_map_pointers', return_value={7: 600, 999: 666}), \
+                     patch.object(oc, '_colonize_cost', side_effect=lambda h,p: [{'resource':'Food','amount':80}] if p==600 else self.fail('Foreign zone decoded')):
+                    self.assertEqual(oc._price_map(h, 2, 'colonizedPrice', {7}), {7:[{'resource':'Food','amount':80}]})
+
+    def test_normal_tech_flags_unwrap_virtual_or_concrete_map(self):
+        for virtual in (False, True):
+            with self.subTest(virtual=virtual):
+                h, _, _, _ = self.heap(virtual)
+                self.assertEqual(oc._simple_own_tech_flags(h,1,4), {'TrialFaith':True,'PaladinCall':False})
+
+    def test_wrapper_mutation_or_null_backing_rejects_price_map(self):
+        h, fields, _, _ = self.heap()
+        def mutate(*args):
+            fields[22, 'map'] = 24
+            return {7: 600}
+        with patch.object(oc, '_integer_map_pointers', side_effect=mutate), \
+             patch.object(oc, '_colonize_cost', return_value=[]), self.assertRaises(ValueError):
+            oc._price_map(h, 2, 'colonizedPrice', {7})
+        h, fields, _, _ = self.heap()
+        fields[22, 'map'] = 0
+        with self.assertRaises(ValueError):
+            oc._price_map(h, 2, 'colonizedPrice', {7})
+
+    def test_tech_value_or_wrapper_changes_do_not_prove_absence(self):
+        for mutation in ('values', 'wrapper', 'wrong_type'):
+            with self.subTest(mutation=mutation):
+                h, fields, types, values = self.heap()
+                def changing(p):
+                    result = dict(values)
+                    if mutation == 'values': values['PaladinCall'] = True
+                    elif mutation == 'wrapper': fields[12, 'map'] = 14
+                    else: types[14] = ('haxe.ds.IntMap', 11)
+                    return result
+                h.string_map = changing
+                with self.assertRaises(ValueError):
+                    oc._simple_own_tech_flags(h,1,4)
+
+
 if __name__=='__main__':unittest.main()

@@ -17,9 +17,11 @@ import sys
 import zipfile
 
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'research/telemetry/test_map_wrappers.py',
+    'tests/test_component_diagnostics.py',
     'research/telemetry/match_context.py',
     'companion/core/match_context_projection.py',
     'research/telemetry/test_match_context.py',

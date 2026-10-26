@@ -21,13 +21,29 @@ from live_reader import Probe, Reader, find_pid, objects, string
 from runtime_types import LayoutError, SCALAR_FORMATS
 from runtime_decode import enum_values, virtual_fields, safe_value
 from capture_identity import runtime_session_key, CaptureIdentityTracker
-from economy_capture import capture_economy
+from economy_capture import capture_economy, EconomicCacheNotReady
 from operation_capture import capture_operations
 from cost_quotes import quote_feast
 from map_capture import capture_map
 from labor_capture import capture_labor
 from growth_capture import capture_growth
 from match_context import capture_match_context
+
+
+def optional_failure_reasons(component_name, error):
+    """Emit only owned static codes, never arbitrary exception messages."""
+    reasons = [component_name + '_component_read_failed']
+    known = {
+        'TownHall is not bound to the local player': 'growth_town_hall_player_reference_conflict',
+        'TownHall scope changed during capture': 'growth_town_hall_scope_changed',
+        'Own growth building scope changed during capture': 'growth_building_scope_changed',
+        'Growth component is not bound to the local player': 'growth_resource_identity_conflict',
+        'Local growth identity changed during capture': 'growth_local_identity_changed',
+    } if component_name == 'population_growth' else {}
+    code = known.get(str(error))
+    if code:
+        reasons.append(code)
+    return reasons
 
 
 def capture_match_context_component(h, me, state, *, profile, identity):
@@ -316,6 +332,11 @@ class ActionProbe(Probe):
             economy['special_shared_resource_mode'] = context['bifrost_data_present']
             if context['bifrost_data_present']:
                 economy['status'] = 'unsupported_resource_mode'
+        except EconomicCacheNotReady:
+            economy = {'schema_version': 1, 'status': 'not_ready',
+                'source': 'native_economic_caches_read_only',
+                'hlboot_sha256': self.profile.get('hlboot_sha256'),
+                'reason_codes': ['economic_cache_not_initialized'], **identities}
         except (ValueError, OSError, KeyError, struct.error) as error:
             economy = {'status': 'read_error', 'error_type': type(error).__name__,
                        'error': str(error), **identities}
@@ -330,7 +351,7 @@ class ActionProbe(Probe):
                 optional[component_name] = read_component()
             except (ValueError, OSError, KeyError, TypeError, struct.error, OverflowError) as error:
                 optional[component_name] = {'schema_version': 1, 'status': 'unavailable',
-                    'reason_codes': [component_name+'_component_read_failed'],
+                    'reason_codes': optional_failure_reasons(component_name, error),
                     'error_type': type(error).__name__, **identities}
         t1 = h.field(state, 'time')
         if (h.field(static, 'inst') != game or h.field(game, 'state') != state

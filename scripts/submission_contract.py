@@ -131,7 +131,11 @@ RECORD_SCHEMAS = {
  'health.ndjson.gz':obj({**BASE,**{k:nullable(TOKEN) for k in ('economy_status','operations_status','map_status','feast_quote_status',
         'labor_status','individual_rate_status','population_growth_status')},
     'labor_unknown_fields':arr(TOKEN,256),'growth_unknown_fields':arr(TOKEN,256),
-    'food_capacity_verified':BOOL,'reason_code':TOKEN,'error_type':TOKEN,'observation_rejection_codes':arr(TOKEN,100)}),
+    'food_capacity_verified':BOOL,'reason_code':TOKEN,'error_type':TOKEN,'observation_rejection_codes':arr(TOKEN,100),
+    'component_diagnostics':obj({name:obj({'source_status':TOKEN,'projection_status':TOKEN,'error_type':TOKEN,
+        'source_reason_codes':arr(TOKEN,100),'projection_reason_codes':arr(TOKEN,100),'read_guard_issues':arr(TOKEN,100)},
+        ('source_status','projection_status')) for name in
+        ('economy','operations','map_observation','labor','population_growth','match_context')})}),
 }
 
 # New 0.3 inputs remain separate from actual rates. This frozen field tree is

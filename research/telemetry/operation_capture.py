@@ -15,7 +15,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / 'runtime'))
 from runtime_types import LayoutError
 from live_reader import objects, string
-from runtime_decode import enum_values
+from runtime_decode import checked_map_backing, enum_values
 
 VERIFIED_HASH = 'db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76'
 VERIFIED_CDB_HASH = '88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3'
@@ -103,12 +103,15 @@ def _price_map(h, world, field, known_zone_ids):
     proxy = h.field(world, field)
     if not proxy or h.object_type(proxy).name != 'hxbit.MapData':
         raise LayoutError('Missing own colonization price map')
-    pointers = _integer_map_pointers(h, h.field(proxy, 'map'))
-    # Unknown keys and values are never exported or decoded into hidden objects.
-    result = {}
-    for zone_id, value in pointers.items():
-        if zone_id in known_zone_ids:
-            result[zone_id] = _colonize_cost(h, value)
+    with checked_map_backing(h, proxy, 'haxe.ds.IntMap') as backing:
+        pointers = _integer_map_pointers(h, backing)
+        # Unknown keys and values are never decoded into hidden objects.
+        result = {}
+        for zone_id, value in pointers.items():
+            if zone_id in known_zone_ids:
+                result[zone_id] = _colonize_cost(h, value)
+        if h.field(world, field) != proxy:
+            raise LayoutError('Own colonization map reference changed while reading')
     return result
 
 
@@ -148,10 +151,12 @@ def _simple_own_tech_flags(h, me, state):
     proxy = h.field(tech, 'researchedTechs')
     if h.object_type(proxy).name != 'hxbit.MapData':
         raise LayoutError('Own researched-tech map unavailable')
-    backing = h.field(proxy, 'map')
-    if h.object_type(backing).name != 'haxe.ds.StringMap':
-        raise LayoutError('Own researched-tech map has unexpected type')
-    keys = set(h.string_map(backing))
+    with checked_map_backing(h, proxy, 'haxe.ds.StringMap') as backing:
+        values = h.string_map(backing)
+        keys = set(values)
+        if (h.string_map(backing) != values or h.field(me, 'tech') != tech
+                or h.field(tech, 'researchedTechs') != proxy):
+            raise LayoutError('Own researched-tech map changed while reading')
     return {name: name in keys for name in ('TrialFaith', 'PaladinCall')}
 
 

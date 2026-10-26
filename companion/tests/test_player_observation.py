@@ -60,7 +60,91 @@ def snapshot_with_economy():
     return source
 
 
+def bootstrap_snapshot():
+    source = snapshot(game_time_seconds=0., population_cap=0,
+                      capture_run_id='run-A', capture_segment_id='run-A:0')
+    source['game_context'] = {'mode': {'kind': 'Singleplayer', 'args': [
+        {'kind': 'FreeForAll', 'args': []}]}, 'editor_present': False,
+        'bifrost_data_present': False}
+    source['buildings'][0]['is_construction'] = False
+    source['economy'] = {'schema_version': 1, 'status': 'not_ready',
+        'source': 'native_economic_caches_read_only', 'hlboot_sha256': MODULE._ECONOMY_BUILD_HASH,
+        'reason_codes': ['economic_cache_not_initialized'],
+        **{key: source[key] for key in ('session_key', 'capture_run_id', 'capture_segment_id')}}
+    return source
+
+
 class PlayerObservationTests(unittest.TestCase):
+    def test_explicit_opening_cache_not_ready_withholds_cap_without_mutating_native_zero(self):
+        source = bootstrap_snapshot()
+        before = copy.deepcopy(source)
+        result = MODULE.project_player_observation(source)
+        self.assertIsNone(result['population_cap'])
+        self.assertEqual(result['unknown_fields']['population_cap'], 'bootstrap_cache_not_initialized')
+        self.assertEqual(result['economy'], {'schema_version': 1, 'status': 'not_ready',
+            'scope': 'no_economic_data', 'reason_codes': ['economic_cache_not_initialized']})
+        self.assertEqual(source, before)
+        self.assertEqual(source['population_cap'], 0)
+
+    def test_not_ready_does_not_forward_extra_raw_payload(self):
+        source = bootstrap_snapshot()
+        source['economy'].update(resources={'Food': {'stock': 999, 'name': 'PRIVATE_PAYLOAD'}},
+                                  raw_pointer='PRIVATE_POINTER', error='PRIVATE_ERROR')
+        result = MODULE.project_player_observation(source)
+        self.assertEqual(set(result['economy']), {'schema_version', 'status', 'scope', 'reason_codes'})
+        self.assertNotIn('PRIVATE', json.dumps(result))
+
+    def test_unverified_not_ready_evidence_rejected_and_zero_cap_preserved(self):
+        for key, value in (('schema_version', True), ('source', 'unverified'),
+                           ('hlboot_sha256', 'bad'), ('reason_codes', []),
+                           ('session_key', 'other'), ('capture_run_id', 'other'),
+                           ('capture_segment_id', 'other')):
+            with self.subTest(field=key):
+                source = bootstrap_snapshot()
+                source['economy'][key] = value
+                result = MODULE.project_player_observation(source)
+                self.assertEqual(result['economy']['status'], 'rejected')
+                self.assertEqual(result['population_cap'], 0)
+                self.assertNotIn('population_cap', result['unknown_fields'])
+
+    def test_later_real_zero_cap_and_ready_opening_zero_cap_are_preserved(self):
+        later = bootstrap_snapshot()
+        later['game_time_seconds'] = 300.
+        self.assertEqual(MODULE.project_player_observation(later)['population_cap'], 0)
+        ready = snapshot_with_economy()
+        ready.update(game_time_seconds=0., population_cap=0)
+        ready['game_context'] = bootstrap_snapshot()['game_context']
+        ready['buildings'][0]['is_construction'] = False
+        ready['economy'].update(game_time_seconds=0., time_before=0., time_after=0.)
+        for resource in ready['economy']['resources'].values():
+            resource.update(cached_at_game_time=0., age_game_seconds=0.)
+        result = MODULE.project_player_observation(ready)
+        self.assertEqual(result['economy']['status'], 'ok')
+        self.assertEqual(result['population_cap'], 0)
+
+    def test_missing_error_or_unsupported_economy_is_not_initialization_evidence(self):
+        for economy in (None, {}, {'status': 'read_error'}, {'status': 'unsupported_resource_mode'}):
+            with self.subTest(economy=economy):
+                source = bootstrap_snapshot()
+                source['economy'] = economy
+                self.assertEqual(MODULE.project_player_observation(source)['population_cap'], 0)
+
+    def test_bootstrap_cap_requires_audited_mode_positive_population_and_completed_own_hall(self):
+        for scenario in ('unsupported_clan', 'unknown_mode', 'unowned_hall', 'construction', 'zero_population'):
+            with self.subTest(scenario=scenario):
+                source = bootstrap_snapshot()
+                if scenario == 'unsupported_clan':
+                    source['clan'] = 'Rat'
+                elif scenario == 'unknown_mode':
+                    del source['game_context']
+                elif scenario == 'unowned_hall':
+                    source['buildings'][0]['kind'] = 'House'
+                elif scenario == 'construction':
+                    source['buildings'][0]['is_construction'] = True
+                else:
+                    source['population'] = 0
+                self.assertEqual(MODULE.project_player_observation(source)['population_cap'], 0)
+
     def test_own_state_is_projected_without_mutating_source(self):
         source = snapshot()
         before = copy.deepcopy(source)

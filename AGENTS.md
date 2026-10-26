@@ -1,6 +1,6 @@
 # Instructions for Codex and other coding assistants
 
-This is an experimental, read-only Northgard own-player telemetry collector, not an automatic player. Current work targets **0.4.0-alpha preparation**, including experimental 3v3 own-player capture and independently contributed perspectives. Read `README.md`, `docs/INSTALL_WITH_CODEX.md`, `docs/GAME_DATA_GUIDE.zh-CN.md`, and `docs/MULTIPLAYER_3V3.md` before installing or explaining a capture. Use `docs/VALIDATION_STATUS.md` for actual validation status; never invent live passes.
+This is an experimental, read-only Northgard own-player telemetry collector, not an automatic player. Current work targets **0.4.1-alpha preparation**, including experimental 3v3 own-player capture and independently contributed perspectives. Read `README.md`, `docs/INSTALL_WITH_CODEX.md`, `docs/GAME_DATA_GUIDE.zh-CN.md`, and `docs/MULTIPLAYER_3V3.md` before installing or explaining a capture. Use `docs/VALIDATION_STATUS.md` for actual validation status; never invent live passes.
 
 ## Install and record within the user's request
 

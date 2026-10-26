@@ -24,6 +24,10 @@ CORE_FIELDS = {'Food': ('food', 'currentFood'), 'Wood': ('wood', 'currentWood'),
 IDENTITY_FIELDS = ('session_key', 'capture_run_id', 'capture_segment_id')
 
 
+class EconomicCacheNotReady(LayoutError):
+    """A null native cache pointer is initialization, not a numeric zero."""
+
+
 def finite(value):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
         raise LayoutError('Nonfinite/non-numeric economic value')
@@ -31,7 +35,9 @@ def finite(value):
 
 
 def float_array(h, address):
-    if not address or h.object_type(address).name != 'hl.types.ArrayBytes_Float':
+    if not address:
+        raise EconomicCacheNotReady('Native economic cache has not been initialized')
+    if h.object_type(address).name != 'hl.types.ArrayBytes_Float':
         raise LayoutError('Expected Float economic cache array')
     size = h.field(address, 'length')
     if not 0 <= size <= 512:

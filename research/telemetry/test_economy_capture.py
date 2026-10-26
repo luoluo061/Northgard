@@ -52,6 +52,15 @@ TABLE = [{'id': name, 'index': idx, 'isProductible': idx < 3,
 
 
 class EconomyCaptureTests(unittest.TestCase):
+    def test_null_cache_is_not_ready_but_wrong_type_is_not_initialization(self):
+        reader = FakeReader()
+        with self.assertRaises(MODULE.EconomicCacheNotReady):
+            MODULE.float_array(reader, 0)
+        reader.object_type = lambda pointer: SimpleNamespace(name='unexpected.type')
+        with self.assertRaises(MODULE.LayoutError) as failure:
+            MODULE.float_array(reader, 4)
+        self.assertNotIsInstance(failure.exception, MODULE.EconomicCacheNotReady)
+
     def sample(self, **options):
         return MODULE.capture_economy(FakeReader(**options), 2, 1, 10.1, TABLE,
                                       identity={'session_key': 'a', 'capture_run_id': 'b', 'capture_segment_id': 'c'},

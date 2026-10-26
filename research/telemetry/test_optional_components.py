@@ -48,6 +48,20 @@ def probe():
 
 
 class OptionalComponentsTests(unittest.TestCase):
+    def test_null_economic_cache_is_not_ready_without_fabricated_zero_rates(self):
+        row = self.sample(economy_error=ac.EconomicCacheNotReady('private exception text'))
+        self.assertEqual(row['status'], 'ok')
+        self.assertEqual(row['economy']['status'], 'not_ready')
+        self.assertEqual(row['economy']['reason_codes'], ['economic_cache_not_initialized'])
+        self.assertNotIn('resources', row['economy'])
+        self.assertNotIn('private', str(row['economy']))
+
+    def test_guard_failure_has_a_static_reason_without_exception_message(self):
+        with patch.object(ac, 'capture_growth', side_effect=ValueError('TownHall is not bound to the local player')):
+            row = self.sample()
+        self.assertIn('growth_town_hall_player_reference_conflict', row['population_growth']['reason_codes'])
+        self.assertNotIn('error', row['population_growth'])
+
     def test_new_labor_and_growth_failures_do_not_discard_core_snapshot(self):
         with (patch.object(ac, 'capture_labor', side_effect=TypeError('private path C:/do-not-export')),
               patch.object(ac, 'capture_growth', side_effect=ValueError('private address 0xDEADBEEF'))):

@@ -19,14 +19,16 @@ try:
     from .operation_projection import project_operations
     from .map_projection import project_map
     from .labor_projection import project_labor
-    from .growth_projection import project_growth
+    from .growth_projection import (project_growth, economic_cache_not_ready,
+                                    population_cap_bootstrap_unavailable)
     from .match_context_projection import project_match_context
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from operation_projection import project_operations
     from map_projection import project_map
     from labor_projection import project_labor
-    from growth_projection import project_growth
+    from growth_projection import (project_growth, economic_cache_not_ready,
+                                   population_cap_bootstrap_unavailable)
     from match_context_projection import project_match_context
 
 
@@ -220,6 +222,13 @@ def _project_economy(value: Any, snapshot: dict, unknown: dict) -> dict:
         unknown["economy"] = reason
         return {"schema_version": 1, "status": "rejected", "reason_codes": [reason],
                 "scope": "no_economic_data"}
+
+    if type(value) is dict and value.get('status') == 'not_ready':
+        if not economic_cache_not_ready(value, snapshot):
+            return blocked('economic_not_ready_evidence_invalid')
+        unknown['economy'] = 'economic_cache_not_initialized'
+        return {'schema_version': 1, 'status': 'not_ready', 'scope': 'no_economic_data',
+                'reason_codes': ['economic_cache_not_initialized']}
 
     if (type(value) is not dict or value.get("schema_version") != 1
             or value.get("status") not in ("ok", "read_race")
@@ -471,6 +480,9 @@ def project_player_observation(snapshot: Any, *, include_own_events: bool = Fals
         else:
             result[field] = None
             unknown[field] = "unavailable"
+    if population_cap_bootstrap_unavailable(snapshot):
+        result['population_cap'] = None
+        unknown['population_cap'] = 'bootstrap_cache_not_initialized'
     if type(snapshot.get("in_winter")) is bool:
         result["in_winter"] = snapshot["in_winter"]
     else:

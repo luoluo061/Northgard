@@ -46,7 +46,48 @@ def observed(when=100., progress=33., **inputs):
     return {**parent, 'population_growth': project_growth(raw, parent)}
 
 
+def bootstrap_fixture():
+    raw, parent = fixture(when=0., population_cap_cache=0)
+    parent['population_cap'] = 0
+    parent['buildings'][0]['is_construction'] = False
+    parent['economy'] = {'schema_version': 1, 'status': 'not_ready',
+        'source': 'native_economic_caches_read_only', 'hlboot_sha256': HLBOOT_SHA256,
+        'reason_codes': ['economic_cache_not_initialized'],
+        **{key: parent[key] for key in ('session_key', 'capture_run_id', 'capture_segment_id')}}
+    return raw, parent
+
+
 class ProjectionTests(unittest.TestCase):
+    def test_bootstrap_native_zero_preserved_without_false_housing_block(self):
+        raw, parent = bootstrap_fixture()
+        before = copy.deepcopy((raw, parent))
+        value = project_growth(raw, parent)
+        self.assertEqual(value['native_inputs']['population_cap_cache'], 0)
+        self.assertNotIn('population_at_cached_housing_limit_observed', value['model']['observed_blocking_inputs'])
+        self.assertIn('native_inputs.population_cap_cache', value['unknown_fields'])
+        self.assertIn('population_cap_bootstrap_uninitialized', value['reason_codes'])
+        self.assertEqual((raw, parent), before)
+
+    def test_later_zero_ready_cache_or_unverified_bootstrap_keeps_housing_block(self):
+        for scenario in ('later', 'ready', 'wrong_identity', 'no_parent_zero', 'incomplete_hall'):
+            with self.subTest(scenario=scenario):
+                raw, parent = bootstrap_fixture()
+                if scenario == 'later':
+                    parent['game_time_seconds'] = 1.
+                    raw.update(game_time_seconds=1., time_before=1., time_after=1.)
+                elif scenario == 'ready':
+                    parent['economy']['status'] = 'ok'
+                elif scenario == 'wrong_identity':
+                    parent['economy']['capture_segment_id'] = 'other'
+                elif scenario == 'no_parent_zero':
+                    parent['population_cap'] = 6
+                else:
+                    parent['buildings'][0]['is_construction'] = True
+                value = project_growth(raw, parent)
+                self.assertEqual(value['native_inputs']['population_cap_cache'], 0)
+                self.assertIn('population_at_cached_housing_limit_observed', value['model']['observed_blocking_inputs'])
+                self.assertNotIn('population_cap_bootstrap_uninitialized', value['reason_codes'])
+
     def test_native_and_modeled_threshold_are_distinct(self):
         raw, parent = fixture()
         value = project_growth(raw, parent)

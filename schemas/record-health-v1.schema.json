@@ -25,6 +25,325 @@
       "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
       "type": "string"
     },
+    "component_diagnostics": {
+      "additionalProperties": false,
+      "properties": {
+        "economy": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
+        "labor": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
+        "map_observation": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
+        "match_context": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
+        "operations": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
+        "population_growth": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
     "contributor_link_status": {
       "maxLength": 128,
       "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",

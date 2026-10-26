@@ -175,6 +175,65 @@ class OperationLedgerTests(unittest.TestCase):
         self.assertIsNone(candidate['cost'])
         self.assertEqual(candidate['match_status'],'not_a_new_payment')
 
+    def test_owned_zone_active_state_does_not_claim_stored_payment(self):
+        for previous_active in (None, False):
+            with self.subTest(previous_active=previous_active):
+                a,b=snap(),snap(11,debit={'Food':40})
+                for row in (a,b):
+                    row['owned_zone_ids'].append(82)
+                if previous_active is not None:
+                    a['operations']['colonizations']=[colony(active=previous_active)]
+                b['operations']['colonizations']=[colony()]
+                row=pair(a,b)
+                candidate=row['operation_candidates'][0]
+                self.assertEqual(candidate['kind'],'existing_owned_zone_colonization_state')
+                self.assertEqual(candidate['payment_effect'],'ownership_progress_change_unknown')
+                self.assertIsNone(candidate['cost'])
+                self.assertEqual(candidate['resource_matches'],{})
+                self.assertEqual(candidate['match_status'],'ambiguous')
+                self.assertNotIn('matched_discrete_change',row['resource_links']['Food'])
+                self.assertAlmostEqual(row['resource_links']['Food']['unexplained_residual'],-40)
+
+    def test_raven_owned_zone_progress_fixture_start_and_end_are_unknown(self):
+        # Minimal recorded fixture, sequences 1065->1066 and 1113->1114:
+        # zone 45 was already owned, then colonizeBy=self appeared with progress
+        # 1.0; later progress was .983333... before the state disappeared.
+        # The ownership never changed, and both payment maps were unavailable.
+        cases = (
+            (272.2971512464602,272.7980617319803,None,1.0),
+            (296.4832767490688,296.9843240902846,.9833333333333345,None),
+        )
+        for t0,t1,p0,p1 in cases:
+            with self.subTest(t0=t0):
+                a,b=snap(t0),snap(t1)
+                for row,progress in ((a,p0),(b,p1)):
+                    row['owned_zone_ids']=[45,55,63]
+                    row['discovered_zone_ids']=[45,55,58,63]
+                    row['operations'].update(status='partial',
+                        unknown_fields=['colonizations.paid_cost','colonizations.extra_paid_cost'])
+                    if progress is not None:
+                        row['operations']['colonizations']=[{'zone_id':45,
+                            'started_by_self':True,'progress':progress,'cost_reduction':None,
+                            'paid_cost':None,'paid_cost_record_status':'unavailable',
+                            'extra_paid_cost':None,'extra_paid_cost_record_status':'unavailable'}]
+                row=pair(a,b)
+                self.assertEqual(len(row['operation_candidates']),1)
+                candidate=row['operation_candidates'][0]
+                self.assertEqual(candidate['kind'],'existing_owned_zone_colonization_state')
+                self.assertEqual(candidate['payment_effect'],'ownership_progress_change_unknown')
+                self.assertIsNone(candidate['cost'])
+                self.assertEqual(candidate['resource_matches'],{})
+                self.assertEqual(candidate['match_status'],'ambiguous')
+                self.assertNotIn('refund',json.dumps(candidate))
+
+    def test_owned_zone_progress_keeps_operation_identity_guard(self):
+        a,b=snap(),snap(11)
+        for row in (a,b):
+            row['owned_zone_ids'].append(82)
+        b['operations']['colonizations']=[colony()]
+        b['operations']['capture_run_id']='foreign'
+        self.assertEqual(pair(a,b)['operation_candidates'],[])
+
     def test_construction_completion_is_separate_from_start(self):
         a,b=snap(),snap(11)
         add_construction(a)

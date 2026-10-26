@@ -3,10 +3,59 @@
 Layouts follow the already vendored HashLink 1.14/1.15 hl.h, maps.c and maps.h.
 No game function calls, process writes or injected hooks.
 """
+from contextlib import contextmanager
 import struct
 
 from runtime_types import LayoutError, SCALAR_FORMATS
 from live_reader import objects, string
+
+
+@contextmanager
+def checked_map_backing(h, address, expected_type, limit=8):
+    """Resolve MapData/virtual wrappers and reject observed retargeting.
+
+    Only a caller-selected StringMap or IntMap is accepted. A null wrapper or
+    storage is unavailable, never proof of an empty map. Map payload readers
+    retain their own header/storage guards; this additionally checks every
+    wrapper link and the concrete map's storage pointer after the read.
+    """
+    if expected_type not in ('haxe.ds.StringMap', 'haxe.ds.IntMap'):
+        raise LayoutError('Unsupported checked map type')
+    seen, signature = set(), []
+    for _ in range(limit):
+        if not address or address in seen:
+            raise LayoutError('Null/cyclic checked map wrapper')
+        seen.add(address)
+        info = h.object_type(address)
+        identity = (info.name, getattr(info, 'kind', None), getattr(info, 'address', None))
+        if info.name == expected_type:
+            link_kind, target = 'storage', h.field(address, 'h')
+        elif info.name == 'hxbit.MapData':
+            link_kind, target = 'map', h.field(address, 'map')
+        elif getattr(info, 'kind', None) == 15:
+            link_kind, target = 'virtual', h.ptr(address + 8)
+        else:
+            raise LayoutError('Unexpected checked map backing type')
+        if not target:
+            raise LayoutError('Null checked map backing/storage')
+        signature.append((address, identity, link_kind, target))
+        if link_kind == 'storage':
+            backing = address
+            break
+        address = target
+    else:
+        raise LayoutError('Too many checked map wrappers')
+    try:
+        yield backing
+    finally:
+        for pointer, identity, link_kind, target in signature:
+            info = h.object_type(pointer)
+            if (info.name, getattr(info, 'kind', None), getattr(info, 'address', None)) != identity:
+                raise LayoutError('Checked map wrapper type changed while reading')
+            current = (h.ptr(pointer + 8) if link_kind == 'virtual' else
+                       h.field(pointer, 'map' if link_kind == 'map' else 'h'))
+            if current != target:
+                raise LayoutError('Checked map wrapper/storage changed while reading')
 
 
 def virtual_fields(h, address):

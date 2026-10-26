@@ -64,6 +64,40 @@ def _verified_ordinary_mode(snapshot):
             and context.get('editor_present') is False)
 
 
+def economic_cache_not_ready(value, snapshot):
+    """Recognize only the pinned reader's explicit uninitialized-cache evidence.
+
+    A missing component, generic read error or unsupported layout is not proof
+    that a zero-valued housing cache is still initializing.
+    """
+    return (type(value) is dict and type(snapshot) is dict
+            and type(value.get('schema_version')) is int and value['schema_version'] == 1
+            and value.get('status') == 'not_ready'
+            and value.get('source') == 'native_economic_caches_read_only'
+            and value.get('hlboot_sha256') == HLBOOT_SHA256
+            and value.get('reason_codes') == ['economic_cache_not_initialized']
+            and all(type(snapshot.get(k)) is str and IDENTITY.fullmatch(snapshot[k])
+                    and value.get(k) == snapshot[k] for k in IDENTITIES))
+
+
+def population_cap_bootstrap_unavailable(snapshot):
+    """Conservative audited opening only; never infer a replacement capacity."""
+    pop = snapshot.get('population')
+    owned = snapshot.get('owned_zone_ids')
+    buildings = snapshot.get('buildings')
+    return (snapshot.get('status') == 'ok'
+            and _number(snapshot.get('game_time_seconds')) and snapshot['game_time_seconds'] == 0
+            and type(pop) is int and pop > 0
+            and type(snapshot.get('population_cap')) is int and snapshot['population_cap'] == 0
+            and snapshot.get('clan') in SUPPORTED_THRESHOLD_CLANS
+            and _verified_ordinary_mode(snapshot)
+            and type(owned) is list and type(buildings) is list
+            and any(type(b) is dict and b.get('kind') == 'TownHall'
+                    and b.get('zone_id') in owned and b.get('is_construction') is False
+                    for b in buildings)
+            and economic_cache_not_ready(snapshot.get('economy'), snapshot))
+
+
 def project_growth(value, snapshot):
     """Whitelist a raw component against a verified parent ActionProbe row."""
     if (type(value) is not dict or type(snapshot) is not dict
@@ -156,7 +190,9 @@ def project_growth(value, snapshot):
             gates.append(code)
     if native['current_happiness'] is not None and native['current_happiness'] <= 0:
         gates.append('cached_happiness_nonpositive_observed')
-    if (native['population_cap_cache'] is not None and _number(pop)
+    cap_initializing = (native['population_cap_cache'] == 0
+                        and population_cap_bootstrap_unavailable(snapshot))
+    if (not cap_initializing and native['population_cap_cache'] is not None and _number(pop)
             and pop >= native['population_cap_cache']):
         gates.append('population_at_cached_housing_limit_observed')
     for hall in output:
@@ -183,8 +219,10 @@ def project_growth(value, snapshot):
                   'blocking_inputs_complete': False,
                   'formula_eta_game_seconds': None,
                   'formula_eta_status': model_reason or 'complete_growth_bonus_and_spawn_gates_unavailable'},
-        'unknown_fields': list(UNKNOWN) + (['model.next_recruit_threshold'] if threshold is None else []),
-        'reason_codes': ['growth_mechanism_partially_observed'] + ([model_reason] if model_reason else []),
+        'unknown_fields': list(UNKNOWN) + (['model.next_recruit_threshold'] if threshold is None else [])
+                          + (['native_inputs.population_cap_cache'] if cap_initializing else []),
+        'reason_codes': ['growth_mechanism_partially_observed'] + ([model_reason] if model_reason else [])
+                        + (['population_cap_bootstrap_uninitialized'] if cap_initializing else []),
         **{k: snapshot[k] for k in IDENTITIES},
     }
 

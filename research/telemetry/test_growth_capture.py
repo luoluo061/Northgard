@@ -24,7 +24,7 @@ class FakeH:
             ('me', 'gameOver'): False, ('me', 'debug'): 'debug',
             ('debug', 'populationCanGrow'): True, ('me', 'modifierFlags'): 'flags',
             ('flags', 'value'): 0, ('me', 'tech'): 'tech',
-            ('tech', 'researchedTechs'): 'map_proxy', ('map_proxy', 'map'): 'map',
+            ('tech', 'researchedTechs'): 'map_proxy', ('map_proxy', 'map'): 'map', ('map', 'h'): 'map_storage',
             ('tech', 'allFountainResearches'): None, ('me', 'owl'): None,
             ('me', 'cook'): 'cook', ('cook', 'activeMeals'): None,
             ('me', 'bonuses'): None, ('state', 'additionalRules'): None,
@@ -80,6 +80,35 @@ class GrowthCaptureTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 capture(h, profile={**PROFILE, key: 'bad'})
             self.assertEqual(h.calls, [])
+
+    def test_null_hall_player_cache_uses_verified_owned_zone(self):
+        h = FakeH()
+        h.fields['hall', 'player'] = 0
+        value = capture(h)
+        self.assertEqual(value['status'], 'partial')
+        self.assertEqual(value['town_halls'][0]['growth_progress'], 33.)
+        self.assertEqual(value['read_guard_issues'], [])
+
+    def test_nonnull_foreign_hall_player_cache_still_rejected(self):
+        h = FakeH()
+        h.fields['hall', 'player'] = 'other'
+        with self.assertRaisesRegex(ValueError, 'TownHall is not bound'):
+            capture(h)
+
+    def test_hall_player_cache_initialization_marks_read_race(self):
+        h = FakeH()
+        real = h.field
+        reads = 0
+        def changing(address, field):
+            nonlocal reads
+            if (address, field) == ('hall', 'player'):
+                reads += 1
+                return 0 if reads == 1 else 'me'
+            return real(address, field)
+        h.field = changing
+        value = capture(h)
+        self.assertEqual(value['status'], 'read_race')
+        self.assertEqual(value['read_guard_issues'], ['town_hall_player_cache_changed_during_read'])
 
     def test_complete_identity_required(self):
         h = FakeH()
@@ -140,6 +169,35 @@ class GrowthCaptureTests(unittest.TestCase):
         value = capture(h)
         self.assertEqual(value['town_halls'][0]['growth_progress'], 77.25)
         self.assertEqual(value['native_inputs']['current_happiness'], -0.5)
+
+    def test_growth_tech_map_virtual_backing_preserves_native_progress(self):
+        h = FakeH()
+        h.fields['map_proxy', 'map'] = 2200
+        original_type = h.object_type
+        h.object_type = lambda p: SimpleNamespace(name='virtual', kind=15) if p==2200 else original_type(p)
+        h.ptr = lambda p: 'map' if p==2208 else self.fail('Unexpected pointer read')
+        value = capture(h)
+        self.assertEqual(value['town_halls'][0]['growth_progress'], 33.)
+        self.assertEqual(value['bonus_inputs']['normal_map_tech_presence'],
+                         {'Recruit': True, 'EndlessTide': False, 'PlotThrone': False})
+
+    def test_bad_or_mutated_growth_tech_map_remains_unknown_not_absent(self):
+        for mutation in ('null', 'wrong_type', 'wrapper_change'):
+            with self.subTest(mutation=mutation):
+                h = FakeH()
+                if mutation == 'null': h.fields['map_proxy', 'map'] = 0
+                elif mutation == 'wrong_type': h.types['map'] = 'haxe.ds.IntMap'
+                else:
+                    original_map = h.string_map
+                    def changing(p):
+                        value = original_map(p)
+                        h.fields['map_proxy', 'map'] = 0
+                        return value
+                    h.string_map = changing
+                value = capture(h)
+                self.assertEqual(value['town_halls'][0]['growth_progress'], 33.)
+                self.assertIsNone(value['bonus_inputs']['normal_map_tech_presence'])
+                self.assertIn('growth_bonus_input_unavailable', value['reason_codes'])
 
 
 if __name__ == '__main__':

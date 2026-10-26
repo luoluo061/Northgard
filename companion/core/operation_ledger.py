@@ -374,6 +374,14 @@ class OperationLedger:
                 old = a['colonizations'].get(zone)
                 if row['started_by_self'] is not True or (old and old['started_by_self'] is not False):
                     continue
+                # colonizeBy/progress can also change on an already-owned zone.
+                # That state alone does not establish another paid expansion.
+                if zone in before['owned_zone_ids']:
+                    candidate('existing_owned_zone_colonization_state', {'zone_id':zone},
+                        effect='ownership_progress_change_unknown',
+                        evidence=('started_by_self_transition', 'zone_already_owned_before_interval'),
+                        blockers=('existing_owned_zone_progress_does_not_identify_operation',))
+                    continue
                 blockers, components = [], []
                 if not _component(a, 'colonizations'):
                     blockers.append('previous_colonization_cost_state_unavailable')
@@ -399,6 +407,12 @@ class OperationLedger:
                     evidence=('started_by_self_transition', 'native_stored_colonization_payment_records'), blockers=blockers)
             for zone, old in a['colonizations'].items():
                 if old['started_by_self'] is not True or b['colonizations'].get(zone, {}).get('started_by_self') is True:
+                    continue
+                if zone in before['owned_zone_ids']:
+                    candidate('existing_owned_zone_colonization_state', {'zone_id':zone},
+                        effect='ownership_progress_change_unknown',
+                        evidence=('colonization_state_ended', 'zone_already_owned_before_interval'),
+                        blockers=('existing_owned_zone_progress_does_not_identify_operation',))
                     continue
                 complete = zone in after['owned_zone_ids'] and zone not in before['owned_zone_ids']
                 candidate('colonization_completed' if complete else 'colonization_ended_unresolved',
