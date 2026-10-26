@@ -30,7 +30,7 @@ from base_rings import BaseRingTracker
 from local_rules import verify_generated_rules
 from create_match_kit import shared_uuid
 
-VERSION = '0.5.0-alpha'
+VERSION = '0.5.1-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
 HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth',
@@ -43,9 +43,48 @@ def now():
 
 
 def atomic_json(path, value):
+    """Keep the last good file when a Windows reader temporarily locks it."""
     temporary = path.with_suffix(path.suffix + '.tmp')
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False), encoding='utf-8')
-    temporary.replace(path)
+    for attempt in range(8):
+        try:
+            temporary.replace(path)
+            return True
+        except PermissionError:
+            if attempt == 7:
+                try:
+                    temporary.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                return False
+            time.sleep(min(0.01 * (2 ** attempt), 0.25))
+
+
+class LocalPublications:
+    """Optional latest/manifest refreshes cannot invalidate appended game data."""
+    def __init__(self):
+        self.pending = set()
+        self.deferred_counts = Counter()
+
+    def write(self, path, value, *, required=False):
+        try:
+            published = atomic_json(path, value)
+        except OSError:
+            # A staging-file write/replace failure is local I/O, never a
+            # failed ReadProcessMemory call or a reason to drop its reader.
+            published = False
+        if published:
+            self.pending.discard(path.name)
+            return True
+        self.pending.add(path.name)
+        self.deferred_counts[path.name] += 1
+        if required:
+            raise OSError('Required local capture metadata publication failed')
+        return False
+
+    @property
+    def status(self):
+        return 'degraded' if self.pending else 'ok'
 
 
 def write_line(handle, value):
@@ -294,8 +333,9 @@ def main(argv=None):
                                 'Shared UUID and A/B seats are participant declarations, not verified cross-client identity.',
                                 'Allied effects, trades and shared-vision discovery provenance are not fully attributed.',
                                 'Base rings use discovered geometric adjacency only; incomplete rings do not establish absent tiles.']}
-    atomic_json(output / 'manifest.json', manifest)
-    atomic_json(output / 'latest.json', {'status': 'waiting_for_game', 'captured_at': now()})
+    publications = LocalPublications()
+    publications.write(output / 'manifest.json', manifest, required=True)
+    publications.write(output / 'latest.json', {'status': 'waiting_for_game', 'captured_at': now()})
     handles = {name: (output / name).open('x', encoding='utf-8') for name in SHARE_FILES if name.endswith('.ndjson')}
     private = (output / 'research-raw.ndjson').open('x', encoding='utf-8') if args.research_raw else None
     connection = ProbeConnection()
@@ -328,7 +368,7 @@ def main(argv=None):
                     manifest['process_connection_count'] = connection.generation
                     manifest['compatibility'] = connection.probe.compatibility
                     manifest['game_build'] = connection.probe.profile['game_build']
-                    atomic_json(output / 'manifest.json', manifest)
+                    publications.write(output / 'manifest.json', manifest)
                 projected = project_player_observation(raw, include_own_events=True)
                 status = 'ok' if projected.get('status') == 'ok' else raw.get('status', 'invalid_snapshot')
                 if raw.get('status') == 'ok' and projected.get('status') != 'ok':
@@ -352,7 +392,7 @@ def main(argv=None):
                     action['labor_transitions'] = labor_transitions.update(projected)
                     write_line(handles['economic-snapshots.ndjson'], economic_row(raw, projected, action))
                     write_line(handles['actions.ndjson'], action)
-                    atomic_json(output / 'latest.json', projected)
+                    publications.write(output / 'latest.json', projected)
                     if private:
                         write_line(private, raw)
                     current_time = raw['game_time_seconds']
@@ -404,7 +444,7 @@ def main(argv=None):
                     growth_progress.update({'status': status})
                     base_rings.update({'status': status})
                     write_line(handles['economic-snapshots.ndjson'], {'status': status, 'sequence': sequence, 'captured_at': now()})
-                    atomic_json(output / 'latest.json', {'status': status, 'captured_at': now()})
+                    publications.write(output / 'latest.json', {'status': status, 'captured_at': now()})
                 health = {'sequence': sequence, 'captured_at': now(), 'status': status,
                           'game_time_seconds': raw.get('game_time_seconds'),
                           'economy_status': raw.get('economy', {}).get('status'),
@@ -446,15 +486,17 @@ def main(argv=None):
                 growth_progress.update({'status': status})
                 base_rings.update({'status': status})
                 write_line(handles['economic-snapshots.ndjson'], health)
-                atomic_json(output / 'latest.json', health)
+                publications.write(output / 'latest.json', health)
                 connection.close()
+            health['local_publication_status'] = publications.status
             counts[status] += 1
             write_line(handles['health.ndjson'], health)
             sequence += 1
             if begin - last_console >= 10 or sequence == 1:
                 print(json.dumps(health, ensure_ascii=False), flush=True)
                 manifest['status_counts'] = dict(counts)
-                atomic_json(output / 'manifest.json', manifest)
+                manifest['local_publication_deferred_counts'] = dict(publications.deferred_counts)
+                publications.write(output / 'manifest.json', manifest)
                 last_console = begin
             if stop_reason == 'game_finished':
                 break
@@ -475,7 +517,8 @@ def main(argv=None):
         manifest.update(recording_state='stopped', stopped_at=now(), stop_reason=stop_reason,
                         status_counts=dict(counts), records_attempted=sequence)
         manifest['economic_reconciliation'] = reconcile_file(output / 'economic-snapshots.ndjson')
-        atomic_json(output / 'manifest.json', manifest)
+        manifest['local_publication_deferred_counts'] = dict(publications.deferred_counts)
+        publications.write(output / 'manifest.json', manifest, required=True)
     print(json.dumps({'status': 'stopped', 'stop_reason': stop_reason,
                       'status_counts': dict(counts), 'reconciliation': manifest['economic_reconciliation']}, ensure_ascii=False), flush=True)
 

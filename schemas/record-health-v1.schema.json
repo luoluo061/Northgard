@@ -534,6 +534,12 @@
       "maxItems": 256,
       "type": "array"
     },
+    "local_publication_status": {
+      "enum": [
+        "ok",
+        "degraded"
+      ]
+    },
     "map_status": {
       "anyOf": [
         {

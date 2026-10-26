@@ -318,6 +318,7 @@ MATCH_CONTEXT['properties']['data_cdb_sha256']={'const':'88d4c84b9622ce237533afc
 RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['match_context']=MATCH_CONTEXT
 RECORD_SCHEMAS['health.ndjson.gz']['properties'].update({
     'match_context_status':nullable(TOKEN),'base_neighborhood_status':nullable({'enum':['unknown','partial']}),
+    'local_publication_status':{'enum':['ok','degraded']},
     'native_mode_kind':nullable(TOKEN),'native_mode_variant':nullable(TOKEN),
     'capture_validation_stage':{'enum':['experimental_multiplayer_unverified','experimental_singleplayer_unverified','native_mode_unverified']},
     'contributor_link_status':TOKEN})

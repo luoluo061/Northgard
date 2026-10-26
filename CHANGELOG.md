@@ -1,5 +1,12 @@
 # 变更记录
 
+## 0.5.1-alpha
+
+- 修复Windows读取最新快照时，原子替换报`PermissionError`使采集器退出的问题：替换有限重试，仍失败则保留最后一份成功文件。
+- 临时文件写出和快照替换的本地I/O错误独立记为延后发布，不再误报为游戏进程权限错误或关闭正常reader；player／economy／actions／health及已启用的private流继续追加。
+- 健康记录增加严格枚举`local_publication_status: ok / degraded`。开头和结尾的manifest仍须明确发布成功，不能把缺少完整元数据的文件夹误认为验收通过。
+- 保留已发生的缺口和跨run/segment边界；修复不恢复旧快照。真实完整窗口和3v3仍待验收。
+
 ## 0.5.0-alpha
 
 - 在每帧本人投影中增加 `base_neighborhood`：以首次唯一确认的已完成本方市政厅为固定参照，用本帧已探索地块的双向几何邻接计算 0／1／2 环，并保存可检查的路径。

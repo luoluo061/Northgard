@@ -17,9 +17,10 @@ import sys
 import zipfile
 
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'tests/test_atomic_publication.py',
     'companion/core/base_rings.py',
     'companion/tests/test_base_rings.py',
     'tests/test_base_ring_collector.py',
