@@ -2,6 +2,8 @@
 
 This is an experimental, read-only Northgard own-player telemetry collector, not an automatic player. Current work targets **0.5.1-alpha preparation**, including discovered base neighborhoods, experimental 3v3 own-player capture and independently contributed perspectives. Read `README.md`, `docs/INSTALL_WITH_CODEX.md`, `docs/GAME_DATA_GUIDE.zh-CN.md`, and `docs/MULTIPLAYER_3V3.md` before installing or explaining a capture. Use `docs/VALIDATION_STATUS.md` for actual validation status; never invent live passes.
 
+Mechanism research now follows `docs/MECHANICS_FRAMEWORK.zh-CN.md`, `docs/MECHANICS_EVIDENCE.md` and `docs/MECHANICS_VALIDATION_PLAN.md`: rules first, conditional model, controlled validation, observation reconciliation, then strategy. `mechanics/baseline.py` is a separate offline homogeneous food model, not a live-rate decoder or automatic adviser. Preserve its preconditions and explicit non-native labels; do not write its estimates into `native_actual_rate`/`native_settled_amount`, assume its input context was verified, or expand it to unverified clans/modes. Current food calculations are code-derived and not controlled-live validated.
+
 ## Install and record within the user's request
 
 - Windows x64, 64-bit Python 3.11+, standard library only. Use an existing interpreter. No administrator rights, execution-policy changes, injected DLLs, native game getter calls, process writes, game edits, or automatic game input.
@@ -28,6 +30,7 @@ This is an experimental, read-only Northgard own-player telemetry collector, not
 - Own-unit UID/kind chains and profession/warband composition can be captured across clans. Housing-population semantics are currently verified only for ordinary Bear/Raven paths. Never claim all clans' populations or economics are fully modeled or replace unknown population with unit count.
 - Housing population, entity count, assigned workers, production candidates, configured rates, model estimates and aggregate native flows are different quantities.
 - Per-unit production getters are dynamic. No complete persistent per-unit actual-income ledger has been found; unknown native rates/settled amounts remain `null`. A production label or occupation change does not prove credited production.
+- Stored `population` (exported under the legacy name `population_cache`) is not the ordinary Bear/Raven housing-population getter. It can be zero while housing population is positive; never use it to replace the verified parent population. Stored resource-growth fields likewise do not replace TownHall growth progress.
 - Optional labor/growth failures need not invalidate core telemetry. Preserve component status and missing-field reasons; missing is not zero.
 - Do not apply audited singleplayer recruitment-threshold or feast-quote models to multiplayer or unknown contexts. Native stored progress/payment inputs may still be recorded independently.
 

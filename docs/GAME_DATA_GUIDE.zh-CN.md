@@ -6,6 +6,8 @@
 
 采样是非原子的状态观察，并非游戏内完整账本。所有结论都应带采集版本、游戏双指纹、session/run/segment、游戏时间与证据层级。
 
+机制层请先读[规则—状态—行动框架](MECHANICS_FRAMEWORK.zh-CN.md)。已有部分明确的底层公式，但完整动态分支、输入与控制实验尚未闭合。当前[基线计算器](../mechanics/README.md)只输出有前提的食物模型；不能据此宣称采集器读到了每个人的最终收入。
+
 ## 1. 时间是共同坐标
 
 `game_time_seconds`来自游戏模拟时钟。0=A800年3月，60游戏秒=一个月，720=一年。暂停不推进时钟。`captured_at`是墙钟，只用于排查采集延迟，不乘产量。
@@ -99,6 +101,8 @@ Wheat、Meat、Fish等生产分支最终归并为Food；Food单个生产槽不�
 ## 9. 增长进度解释住房与幸福度的价值
 
 `population_growth.town_halls[].growth_progress`是市政厅直接存储的进度。`native_inputs.current_happiness`等为缓存输入；`growth_bonus`是动态函数结果，当前不完整求值，保持null。
+
+其中兼容字段`population_cache`是资源组件的stored population，并非普通熊／乌鸦住房人口getter；`resource_growth_progress`也不是市政厅增长进度的替代品。普通人口模型使用已核的父级住房人口，不能把这些储存槽的0解释成零人口或零出生进度。
 
 仅在明确验证为熊／乌鸦普通单人 FFA、非编辑器且无 Bifrost 数据时，下一招募阈值才按`55+5P`建模；它写在`model`里，不是直接读取的getter结果。3v3、模式缺失和特殊模式的该门槛、比例与条件ETA保持 null，不把单人公式套进多人。住房上限、幸福非正、增长禁用等可观察阻塞输入会单列，但城镇战斗／出生位置与特殊规则可能仍不完整。
 

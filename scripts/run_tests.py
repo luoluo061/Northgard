@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
-SUITES=('companion/tests','research/telemetry','collector','tests')
+SUITES=('companion/tests','research/telemetry','collector','tests','mechanics')
 
 
 def main():

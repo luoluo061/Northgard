@@ -38,7 +38,7 @@ H <= 0 时，普通增长速率为 0
 | `native_inputs.resource_growth_progress` | `ResourcesComponent.growth` 的储存进度 | 与市政厅进度分开保存，不能混作唯一进度 |
 | `town_halls[].growth_progress` | 每座自有市政厅的 `TownHall.growth` | 进度直接读出；同次读取进度改变会标记竞态并拒绝投影 |
 | `native_inputs.current_happiness` | 生产更新使用的 `currentHappiness` 缓存 | 不是即时执行 `getHappiness()` 得到的完整重算值 |
-| `native_inputs.population_cache` | 资源组件中的人口缓存 | 保留与父快照住房人口的一致性检查，不以单位对象数代替 |
+| `native_inputs.population_cache` | 资源组件的stored population，兼容字段名 | 不等于普通熊／乌鸦住房人口getter；可能为0，模型使用已核父级住房人口并保留差异标记 |
 | `native_inputs.population_cap_cache` | `nbMaxPop` 住房上限缓存 | 表示缓存观察，不能证明所有特殊氏族上限分支均已重建 |
 | `native_inputs.growth_disabled_modifier` | 已核对的禁用增长标志位 | 是一个直接可读阻塞输入，不是完整 `getNoGrowthReason()` 结果 |
 | `native_inputs.debug_population_can_grow` | 原生增长开关 | 未读取时为 `null`，不会默认开放 |

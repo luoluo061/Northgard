@@ -20,6 +20,13 @@ import zipfile
 VERSION = "0.5.1"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'mechanics/baseline.py',
+    'mechanics/test_baseline.py',
+    'mechanics/rules.v1.json',
+    'mechanics/README.md',
+    'docs/MECHANICS_FRAMEWORK.zh-CN.md',
+    'docs/MECHANICS_EVIDENCE.md',
+    'docs/MECHANICS_VALIDATION_PLAN.md',
     'tests/test_atomic_publication.py',
     'companion/core/base_rings.py',
     'companion/tests/test_base_rings.py',

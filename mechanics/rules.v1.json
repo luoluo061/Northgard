@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "model_version": "ordinary-food-baseline.v1",
+  "review_date": "2026-10-27",
+  "build": {
+    "steam_build": "25096976",
+    "game_version": "v4.3.29.43387",
+    "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+    "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+  },
+  "provenance": "Curated numeric facts checked against the installed compiled functions and selected configuration fields; no full game tables or assets included.",
+  "evidence_level": "code_derived_not_controlled_live_validated",
+  "controlled_live_validation": "not_run",
+  "rules": [
+    {
+      "id": "time.game_month",
+      "value": 60,
+      "unit": "game_seconds",
+      "functions": [7555, 7577],
+      "notes": "Year 720 game seconds, initial displayed month March; wall clock is separate."
+    },
+    {
+      "id": "food.villager_base",
+      "value": 0.4,
+      "unit": "Food_per_game_second",
+      "configuration": "unit.Villager.produce[Food].q",
+      "functions": [4134, 4139, 4293, 4294],
+      "conditions": ["eligible continuous Villager Food work", "no other production bonuses or maluses", "no stock clipping"],
+      "notes": "Configuration plus inspected ordinary production branch; not a per-unit measured payout."
+    },
+    {
+      "id": "food.population_consumption_base",
+      "expression": "b(P) = 0.1 * (1 + sqrt(P / 46)); ordinary member sum = b(P) * sum(unit_food_multiplier)",
+      "functions": [38399, 38421, 4523],
+      "constants": {"scale": 0.1, "population_divisor": 46},
+      "conditions": ["human ordinary economy", "difficultyFood=1", "specialFoodFactor=1", "coefCons=1", "no independent trade or extra consumption"],
+      "notes": "The executable homogeneous baseline additionally assumes multiplier sum=P. Housing population and food-consuming unit weights are distinct."
+    },
+    {
+      "id": "food.winter_penalty",
+      "expression": "f(P)=max(0.6,0.7-P/300); gatherer q=0.4*(1+s*(f(P)-1))",
+      "functions": [4294, 4296],
+      "constants": {"floor": 0.6, "offset": 0.7, "population_divisor": 300},
+      "parameters": {"s_ordinary": 1.0, "s_Bear": 0.7},
+      "conditions": ["winter", "ordinary Villager Food branch", "no other winter scale changes or modifiers"],
+      "notes": "Not a universal factor for fish, sailors, or all food jobs; Farmer Wheat first changes its winter base."
+    },
+    {
+      "id": "bear.winter_penalty_scale",
+      "value": 0.7,
+      "configuration": "clan.Bear.bonuses.CWinterMalusReduce",
+      "functions": [4296],
+      "notes": "Scale the winter penalty amplitude; it is not a direct total-production multiplier."
+    },
+    {
+      "id": "bear.winterfestival_food_consumption",
+      "value": 0.7,
+      "configuration": "tech.WinterFestival.values[0].val=0.3",
+      "functions": [4523],
+      "conditions": ["Bear has the effective WinterFestival technology", "winter"],
+      "notes": "Unit food multiplier receives 1-0.3. No Food production bonus is added by this rule."
+    }
+  ],
+  "baseline_conditions": [
+    "ordinary human singleplayer, Bear or Raven",
+    "fixed positive housing population; homogeneous ordinary food consumers",
+    "all counted gatherers perform effective uninterrupted Villager Food work",
+    "no Wounded/NotHappy production penalties, sickness effects, tools, upgraded production buildings, feast, local bonuses, disasters, or other unmodeled effects",
+    "no trades, independent food income, discrete spending, resource caps or starvation integration",
+    "WinterFestival is the only separately selected technology exception"
+  ],
+  "unsupported": [
+    "other clans and modes", "live input-context verification", "native per-unit production or settlement", "full dynamic bonus composition",
+    "population growth and exact birth ETA", "full map traversability and colonization legality", "optimal strategy or fixed cross-resource exchange prices"
+  ]
+}
