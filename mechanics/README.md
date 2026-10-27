@@ -1,6 +1,6 @@
 # 先理解规则，再使用采集数据
 
-本目录是与采集器分开的**条件基线模型**。它不访问游戏、不操作人口、不输出原生逐人实产，也不自动推荐岗位。研究框架见 [MECHANICS_FRAMEWORK.zh-CN.md](../docs/MECHANICS_FRAMEWORK.zh-CN.md)。
+本目录是与采集器分开的**条件基线模型**。它不访问游戏、不操作人口、不输出原生逐人实产，也不自动推荐岗位。先通过[研究任务与首批人口表](../docs/MECHANICS_RESEARCH_PROGRAM.zh-CN.md)理解人口经济、转换和氏族路线，再讨论战略目标；完整框架见 [MECHANICS_FRAMEWORK.zh-CN.md](../docs/MECHANICS_FRAMEWORK.zh-CN.md)。
 
 当前绑定 `v4.3.29.43387 / Steam Build 25096976` 的双指纹，先实现普通熊／乌鸦人类单人经济中的同质食物模型：村民采食、人口规模食耗、冬罚、熊天赋与冬节。完整前提、函数ID和证据等级在 [rules.v1.json](rules.v1.json)。游戏更新后需要重新验证；CLI本身不会验证当前安装或实际局内前提。
 
