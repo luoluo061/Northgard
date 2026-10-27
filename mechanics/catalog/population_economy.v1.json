@@ -1,0 +1,572 @@
+{
+  "schema_version": 1,
+  "catalog_id": "population_economy.v1",
+  "review_date": "2026-10-27",
+  "build": {
+    "steam_build": "25096976",
+    "game_version": "v4.3.29.43337",
+    "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+    "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+  },
+  "scope": "ordinary_human_singleplayer_homogeneous_baseline",
+  "evidence_policy": {
+    "controlled_live_validation": "not_run",
+    "model_outputs_are_native_measurements": false,
+    "input_context_is_automatically_verified": false,
+    "real_observation_examples": "Anonymous numeric summaries only; source records and identifiers remain private",
+    "null_is_not_zero": true
+  },
+  "baseline_conditions": [
+    "ordinary human singleplayer, Bear or Raven",
+    "fixed positive housing population; homogeneous ordinary food consumers",
+    "all counted gatherers perform effective uninterrupted Villager Food work",
+    "no Wounded/NotHappy production penalties, sickness effects, tools, upgraded production buildings, feast, local bonuses, disasters, or other unmodeled effects",
+    "no trades, independent food income, discrete spending, resource caps or starvation integration",
+    "WinterFestival is the only separately selected technology exception"
+  ],
+  "rules": [
+    {
+      "id": "clock.game_month",
+      "expression": "1 game month = 60 game seconds; year = 720 game seconds; t=0 is A800 March",
+      "units": "game_seconds",
+      "evidence": {
+        "level": "code_derived",
+        "functions": [
+          7555,
+          7577
+        ],
+        "sources": [
+          "docs/MECHANICS_EVIDENCE.md",
+          "docs/MECHANICS_FRAMEWORK.zh-CN.md"
+        ]
+      }
+    },
+    {
+      "id": "clock.ui_flow_scale",
+      "expression": "ordinary displayed flow = format(native_rate_per_game_second * 10)",
+      "evidence": {
+        "level": "code_derived",
+        "functions": [
+          26217,
+          8643,
+          8644
+        ],
+        "sources": [
+          "docs/MECHANICS_EVIDENCE.md"
+        ]
+      },
+      "limits": [
+        "Not every UI field or debug mode is covered",
+        "Determine whether the widget shows gross or net before interpreting a number"
+      ]
+    },
+    {
+      "id": "food.villager_base",
+      "value": 0.4,
+      "unit": "Food_per_game_second",
+      "month_equivalent": 24.0,
+      "conditions": [
+        "eligible uninterrupted Villager Food work",
+        "no other production bonuses or maluses",
+        "no stock clipping"
+      ],
+      "evidence": {
+        "level": "configuration_and_code_derived",
+        "configuration": "unit.Villager.produce[Food].q",
+        "functions": [
+          4134,
+          4139,
+          4293,
+          4294
+        ],
+        "sources": [
+          "mechanics/rules.v1.json",
+          "mechanics/baseline.py"
+        ]
+      }
+    },
+    {
+      "id": "food.per_person_population_base",
+      "expression": "b(P) = 0.1 * (1 + sqrt(P/46))",
+      "unit": "Food_per_ordinary_member_per_game_second",
+      "population_input": "verified ordinary Bear/Raven housing population, not the legacy stored population_cache",
+      "evidence": {
+        "level": "code_derived",
+        "functions": [
+          38399,
+          38421,
+          4523
+        ],
+        "sources": [
+          "mechanics/rules.v1.json",
+          "mechanics/baseline.py",
+          "docs/UNIT_PRODUCTION_LIMITS.md"
+        ]
+      }
+    },
+    {
+      "id": "food.members_consumption",
+      "expression": "C_members = b(P) * sum(unit_food_multiplier_i)",
+      "conditions": [
+        "Individual food eligibility and multipliers are known"
+      ],
+      "limits": [
+        "Difficulty, special food factors, consumption coefficient and independent extra terms still require their actual branches"
+      ],
+      "evidence": {
+        "level": "code_derived",
+        "functions": [
+          38399,
+          38421,
+          4523
+        ],
+        "sources": [
+          "docs/MECHANICS_EVIDENCE.md",
+          "docs/MECHANICS_FRAMEWORK.zh-CN.md"
+        ]
+      }
+    },
+    {
+      "id": "food.homogeneous_consumption",
+      "expression": "C(P) = 0.1 * P * (1 + sqrt(P/46))",
+      "conditions": [
+        "sum(unit_food_multiplier_i) equals P",
+        "difficultyFood=1",
+        "specialFoodFactor=1",
+        "coefCons=1",
+        "no independent food trade or extra consumption"
+      ],
+      "evidence": {
+        "level": "conditional_code_derived",
+        "sources": [
+          "mechanics/baseline.py",
+          "mechanics/rules.v1.json"
+        ]
+      }
+    },
+    {
+      "id": "food.steady_labor_budget",
+      "expressions": {
+        "net": "N(P,G) = G*g - C(P)",
+        "minimum_gatherers": "ceil(C(P)/g)",
+        "existing_worker_reassignment": "delta_food_rate = -g when one existing gatherer leaves Food for an equal-consumption role",
+        "additional_member_consumption": "C(P+1) - C(P)"
+      },
+      "limits": [
+        "Fixed population and conditions",
+        "Nonnegative steady food is not an opening plan",
+        "Keep construction, movement, one-time payments and stock constraints separate"
+      ],
+      "evidence": {
+        "level": "conditional_model_derivation",
+        "sources": [
+          "mechanics/baseline.py",
+          "docs/MECHANICS_FRAMEWORK.zh-CN.md"
+        ]
+      }
+    },
+    {
+      "id": "food.winter_gatherer",
+      "expressions": {
+        "ordinary_factor": "f(P) = max(0.6, 0.7-P/300)",
+        "Raven": "g = 0.4*f(P)",
+        "Bear": "g = 0.4*(1+0.7*(f(P)-1))"
+      },
+      "conditions": [
+        "winter",
+        "ordinary Villager Food branch",
+        "no other winter scale changes or modifiers"
+      ],
+      "evidence": {
+        "level": "code_derived",
+        "functions": [
+          4294,
+          4296
+        ],
+        "configuration": "clan.Bear.bonuses.CWinterMalusReduce=0.7",
+        "sources": [
+          "mechanics/baseline.py",
+          "mechanics/rules.v1.json",
+          "docs/MECHANICS_EVIDENCE.md",
+          "docs/BEAR_KNOWLEDGE_REFERENCE.zh-CN.md",
+          "mechanics/catalog/bear_knowledge.v1.json"
+        ],
+        "cross_catalog_rules": [
+          {
+            "catalog": "bear_knowledge.v1.json",
+            "section": "winter_rules",
+            "rule_id": "bear.base_winter_food_penalty"
+          },
+          {
+            "catalog": "bear_knowledge.v1.json",
+            "section": "winter_rules",
+            "rule_id": "bear.base_winter_heating_penalty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bear.winterfestival_food_consumption",
+      "expression": "multiply ordinary member Food consumption by 1-0.3=0.7 when WinterFestival is effective in winter",
+      "acquisition_semantics": "WinterFestival replaces Mining in Bear specificTechs and is an ordinary selectable lore node; clan Bear alone does not establish effective hasTech",
+      "ui_description_conflict": "Bear initial Chinese description mentions 30 percent food/firewood consumption reduction; inspected Food code uses the initial coefficient on winter production penalty amplitude. Do not treat the description as initial Food consumption multiplied by 0.7.",
+      "evidence": {
+        "level": "configuration_and_code_derived",
+        "functions": [
+          4523,
+          4295,
+          4296,
+          38421
+        ],
+        "configuration": [
+          "clan.Bear.specificTechs Mining->WinterFestival",
+          "tech.WinterFestival.values[0].val=0.3",
+          "clan.Bear.bonuses.CWinterMalusReduce=0.7"
+        ],
+        "sources": [
+          "docs/MECHANICS_EVIDENCE.md",
+          "mechanics/baseline.py",
+          "docs/BEAR_KNOWLEDGE_REFERENCE.zh-CN.md",
+          "mechanics/catalog/bear_knowledge.v1.json"
+        ],
+        "cross_catalog_rules": [
+          {
+            "catalog": "bear_knowledge.v1.json",
+            "section": "winter_rules",
+            "rule_id": "bear.winterfestival_food_consumption"
+          },
+          {
+            "catalog": "bear_knowledge.v1.json",
+            "section": "winter_rules",
+            "rule_id": "bear.winterfestival_nonfood_production"
+          }
+        ]
+      },
+      "limits": [
+        "Effective technology check is required",
+        "Non-Food production bonus is a separate branch",
+        "No baseline model change is implied"
+      ]
+    },
+    {
+      "id": "food.aggregate_cache",
+      "expression": "gross_aggregate_Food = currentFood + Food_consumption",
+      "evidence": {
+        "level": "code_derived_cache_semantics",
+        "functions": [
+          13460
+        ],
+        "sources": [
+          "research/telemetry/economy_capture.py",
+          "companion/core/player_observation.py"
+        ]
+      },
+      "limits": [
+        "Use each resource cached_at_game_time",
+        "Base Food slot is not guaranteed to contain natural-food conversions",
+        "Do not sum natural-food cache slots into the aggregate again",
+        "Snapshots are non-atomic"
+      ]
+    },
+    {
+      "id": "stock.accounting",
+      "expression": "delta_stock = integrated_gross_production - clipped_production - integrated_consumption + one_time_income - one_time_cost + other_net_transfers + residual",
+      "evidence": {
+        "level": "conditional_accounting_model",
+        "sources": [
+          "companion/core/economy_reconcile.py",
+          "docs/MECHANICS_FRAMEWORK.zh-CN.md"
+        ]
+      },
+      "limits": [
+        "Ordinary Food/Wood/Money supported reconciliation only",
+        "Resource floors, starvation, negative production, cap changes, special shared modes and identity boundaries require rejection or another model",
+        "Ore threshold extraction is not a generic continuous Food flow"
+      ]
+    },
+    {
+      "id": "food.finite_cap_cycle",
+      "expressions": {
+        "post_consumption": "S-D",
+        "applied_production": "A = min(Q, max(0, K-(S-D)))",
+        "clipped": "L=Q-A",
+        "predicted_delta": "A-D"
+      },
+      "conditions": [
+        "verified stable finite Food capacity K",
+        "nonnegative ordinary production and consumption",
+        "S-D >= 0",
+        "same identity segment and valid resource clocks",
+        "no relevant unexplained discrete transaction"
+      ],
+      "evidence": {
+        "level": "code_derived_and_observation_consistency",
+        "sources": [
+          "companion/core/economy_reconcile.py",
+          "docs/POPULATION_ECONOMY.zh-CN.md"
+        ]
+      },
+      "limits": [
+        "Accepted reconciliation is consistency under assumptions, not proof of no unobserved action"
+      ]
+    }
+  ],
+  "conditional_examples": {
+    "non_winter_population_table": [
+      {
+        "population": 4,
+        "food_consumption_per_person_per_game_second": 0.12948839123097944,
+        "food_consumption_per_game_month": 31.077213895435065,
+        "minimum_gatherers_nonnegative_steady_food": 2,
+        "additional_population_total_consumption_per_month": 8.813493205501741,
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "population": 5,
+        "food_consumption_per_person_per_game_second": 0.13296902366978935,
+        "food_consumption_per_game_month": 39.89070710093681,
+        "minimum_gatherers_nonnegative_steady_food": 2,
+        "additional_population_total_consumption_per_month": 9.11096503232626,
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "population": 6,
+        "food_consumption_per_person_per_game_second": 0.13611575592573075,
+        "food_consumption_per_game_month": 49.001672133263064,
+        "minimum_gatherers_nonnegative_steady_food": 3,
+        "additional_population_total_consumption_per_month": 9.382307316452298,
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "population": 10,
+        "food_consumption_per_person_per_game_second": 0.1466252404120157,
+        "food_consumption_per_game_month": 87.97514424720941,
+        "minimum_gatherers_nonnegative_steady_food": 4,
+        "additional_population_total_consumption_per_month": 10.299492449631105,
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "population": 20,
+        "food_consumption_per_person_per_game_second": 0.16593804733957873,
+        "food_consumption_per_game_month": 199.12565680749447,
+        "minimum_gatherers_nonnegative_steady_food": 9,
+        "additional_population_total_consumption_per_month": 12.00799770371975,
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      }
+    ],
+    "fixed_10_people_4_gatherers_nonwinter": {
+      "gatherer_gross_food_per_game_second": 0.4,
+      "food_consumption_per_person_per_game_second": 0.1466252404120157,
+      "total_food_consumption_per_game_second": 1.4662524041201568,
+      "gross_food_per_game_month": 96.0,
+      "food_consumption_per_game_month": 87.97514424720941,
+      "net_food_per_game_month": 8.024855752790598,
+      "minimum_gatherers_for_nonnegative_steady_food": 4,
+      "steady_food_self_sufficient_is_feasible": true,
+      "nonfood_workers_after_minimum_food_labor": 6,
+      "extra_worker_support_equivalent_at_fixed_population": 1.7280432678303095,
+      "marginal_total_food_consumption_for_one_more_ordinary_person_per_game_second": 0.17165820749385174,
+      "food_to_nonfood_reassignment_delta_food_per_game_second": -0.4
+    },
+    "winter_fixed_10_people": [
+      {
+        "inputs": {
+          "population": 10,
+          "ordinary_food_consumers": 10,
+          "gatherers": 4,
+          "clan": "Raven",
+          "season": "winter",
+          "winter_festival": false
+        },
+        "estimates": {
+          "gatherer_gross_food_per_game_second": 0.26666666666666666,
+          "food_consumption_per_person_per_game_second": 0.1466252404120157,
+          "total_food_consumption_per_game_second": 1.4662524041201568,
+          "gross_food_per_game_month": 64.0,
+          "food_consumption_per_game_month": 87.97514424720941,
+          "net_food_per_game_month": -23.975144247209407,
+          "minimum_gatherers_for_nonnegative_steady_food": 6,
+          "steady_food_self_sufficient_is_feasible": true,
+          "nonfood_workers_after_minimum_food_labor": 4,
+          "extra_worker_support_equivalent_at_fixed_population": 0.8186955118868728,
+          "marginal_total_food_consumption_for_one_more_ordinary_person_per_game_second": 0.17165820749385174,
+          "food_to_nonfood_reassignment_delta_food_per_game_second": -0.26666666666666666
+        },
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "inputs": {
+          "population": 10,
+          "ordinary_food_consumers": 10,
+          "gatherers": 4,
+          "clan": "Bear",
+          "season": "winter",
+          "winter_festival": false
+        },
+        "estimates": {
+          "gatherer_gross_food_per_game_second": 0.30666666666666664,
+          "food_consumption_per_person_per_game_second": 0.1466252404120157,
+          "total_food_consumption_per_game_second": 1.4662524041201568,
+          "gross_food_per_game_month": 73.6,
+          "food_consumption_per_game_month": 87.97514424720941,
+          "net_food_per_game_month": -14.375144247209413,
+          "minimum_gatherers_for_nonnegative_steady_food": 5,
+          "steady_food_self_sufficient_is_feasible": true,
+          "nonfood_workers_after_minimum_food_labor": 5,
+          "extra_worker_support_equivalent_at_fixed_population": 1.0914998386699035,
+          "marginal_total_food_consumption_for_one_more_ordinary_person_per_game_second": 0.17165820749385174,
+          "food_to_nonfood_reassignment_delta_food_per_game_second": -0.30666666666666664
+        },
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      },
+      {
+        "inputs": {
+          "population": 10,
+          "ordinary_food_consumers": 10,
+          "gatherers": 4,
+          "clan": "Bear",
+          "season": "winter",
+          "winter_festival": true
+        },
+        "estimates": {
+          "gatherer_gross_food_per_game_second": 0.30666666666666664,
+          "food_consumption_per_person_per_game_second": 0.10263766828841098,
+          "total_food_consumption_per_game_second": 1.0263766828841097,
+          "gross_food_per_game_month": 73.6,
+          "food_consumption_per_game_month": 61.58260097304658,
+          "net_food_per_game_month": 12.017399026953415,
+          "minimum_gatherers_for_nonnegative_steady_food": 4,
+          "steady_food_self_sufficient_is_feasible": true,
+          "nonfood_workers_after_minimum_food_labor": 6,
+          "extra_worker_support_equivalent_at_fixed_population": 1.9878569123855767,
+          "marginal_total_food_consumption_for_one_more_ordinary_person_per_game_second": 0.12016074524569621,
+          "food_to_nonfood_reassignment_delta_food_per_game_second": -0.30666666666666664
+        },
+        "evidence": {
+          "level": "code_derived_not_controlled_live_validated",
+          "controlled_live_validation": "not_run",
+          "is_native_measurement": false
+        }
+      }
+    ]
+  },
+  "anonymized_illustrations": [
+    {
+      "id": "cache_worker_reassignment_boundary",
+      "evidence_level": "anonymous_aggregate_summary_of_real_observation",
+      "context": "Technical example from an unsuccessful singleplayer operation test; not strategic validation",
+      "summary": "Food labels changed from five to four while cached aggregate remained 2.0; next native cache was 1.6. One worker was assigned to construction.",
+      "aggregate_values": {
+        "population": 5,
+        "food_labels_before": 5,
+        "food_labels_after": 4,
+        "gross_cache_at_boundary": 2.0,
+        "gross_cache_next": 1.6
+      },
+      "limits": [
+        "Current task and cached integrated flow are not the same time",
+        "Exact assignment completion time and individual payout are unknown"
+      ]
+    },
+    {
+      "id": "cache_population_growth_boundary",
+      "evidence_level": "anonymous_aggregate_summary_of_real_observation",
+      "context": "Technical example, not strategic validation",
+      "summary": "Population and Food labels became six while the cache still reflected five; next cache held the six-member values.",
+      "aggregate_values": {
+        "population_before": 5,
+        "population_after": 6,
+        "food_labels_after": 6,
+        "gross_cache_before_refresh": 2.0,
+        "gross_cache_after_refresh": 2.4,
+        "consumption_cache_before_refresh": 0.6648451183489468,
+        "consumption_cache_after_refresh": 0.8166945355543845
+      },
+      "limits": [
+        "No exact birth timing or per-person measurement is established"
+      ]
+    },
+    {
+      "id": "wounded_label_count_boundary",
+      "evidence_level": "anonymous_aggregate_summary_of_real_observation",
+      "aggregate_values": {
+        "Villager_count": 9,
+        "Food_label_count": 9,
+        "gross_aggregate_food_per_game_second": 3.52,
+        "unmodified_nine_villager_baseline": 3.6,
+        "one_Wounded_effect_entry_present": true
+      },
+      "causal_attribution": null,
+      "limits": [
+        "Effect entry presence is not a full effective modifier evaluation",
+        "Do not divide aggregate flow by headcount and label it individual native production"
+      ]
+    },
+    {
+      "id": "food_cap_short_window",
+      "evidence_level": "anonymous_real_stock_observation_with_cache_integral_estimates",
+      "context": "Technical conservation example from an unsuccessful singleplayer operation test; not strategic validation",
+      "observed": {
+        "stock_before": 500.0,
+        "stock_after": 500.0,
+        "stock_delta": 0.0,
+        "verified_food_capacity": 500.0
+      },
+      "estimated": {
+        "resource_cache_elapsed_game_seconds": 0.5002558136991979,
+        "gross_production_integral": 1.7609004642211765,
+        "applied_production_integral": 0.6493787108533979,
+        "clipped_production_integral": 1.1115217533677786,
+        "consumption_integral": 0.6493787108533858,
+        "unexplained_residual": -1.2101430968414206e-14
+      },
+      "reconciliation_status": "accepted",
+      "limits": [
+        "Integrals are estimates from resource clocks, not individual settled quantities",
+        "Accepted consistency does not prove complete observation of all actions"
+      ]
+    }
+  ],
+  "unknown_native_unit_outputs": {
+    "native_actual_rate": null,
+    "native_settled_amount": null,
+    "model_effective_rate": null,
+    "can_produce": null,
+    "reason": "No complete stable per-unit settled-production cache or complete effective model was obtained."
+  },
+  "unsupported": [
+    "Other clans and modes",
+    "Full dynamic modifiers and complete production eligibility",
+    "Exact population growth ETA",
+    "Unqualified hero payment conclusions",
+    "Optimal role allocation or fixed resource exchange prices"
+  ]
+}

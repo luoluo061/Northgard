@@ -1,0 +1,876 @@
+{
+  "schema_version": 1,
+  "catalog_id": "economic-conversions.v1",
+  "review_date": "2026-10-27",
+  "build": {
+    "steam_build": "25096976",
+    "game_version": "v4.3.29.43337",
+    "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+    "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+  },
+  "scope": {
+    "clans": [
+      "Bear",
+      "Raven"
+    ],
+    "context": "ordinary human singleplayer; clan-specific cards have narrower guards",
+    "excluded": [
+      "AI resource rules",
+      "multiplayer economic predictions",
+      "campaign",
+      "conquest",
+      "editor maps",
+      "Bifrost",
+      "special rules",
+      "other clans"
+    ],
+    "kind": "curated conversion facts and conditional mechanism cards, not an executable complete economy or recommendation engine",
+    "input_context_verified_by_this_catalog": false
+  },
+  "semantics": {
+    "time_unit": "game_seconds; pauses contribute zero elapsed production, growth or labor time",
+    "cost_vector": "positive quantities are resources required; omitted keys in a known vector mean absent from that particular vector, not zero total investment",
+    "null": "not established or not modeled, never an implied zero",
+    "empty_cost_vector": "known zero resource charge only in an explicitly identified branch; facilities, labor, prerequisites and time remain separate",
+    "base_cost": "installed configuration or ordinary constant vector before current-state price branches",
+    "conditional_quote": "code-derived result under listed guards, not an observed native UI quote",
+    "observed_quote": "complete quote actually observed at a specified game state; none is supplied by this catalog",
+    "observed_payment": "payment actually linked to the operation and reconciled separately from continuous flows; none is supplied by this catalog",
+    "completion": "payment, project creation, completion, staffing, eligibility, aggregate-rate update and stock credit are different milestones",
+    "labor": "assigned headcount, effective production and native individual settlement are different quantities",
+    "comparison": "retain resource and capability vectors plus deadlines; no permanent cross-resource exchange rate or unconditional best action"
+  },
+  "default_observation_status": {
+    "observed_quote": null,
+    "observed_payment": null,
+    "observed_completion": null,
+    "controlled_live_validation": "not_established_by_this_catalog",
+    "native_actual_rate": null,
+    "native_settled_amount": null
+  },
+  "sources": {
+    "population_food": {
+      "kind": "previous_selected_code_review_and_existing_conditional_model",
+      "configuration": [
+        "unit.Villager.produce[Food].q"
+      ],
+      "functions": [
+        13449,
+        13468,
+        13480,
+        4313,
+        38399,
+        38421,
+        4523
+      ],
+      "summary": "Housing population and stored population differ. Ordinary food consumption has a population-size term and separately weighted eligible units; the homogeneous simplification requires their weight sum to equal P.",
+      "public_reference": "../rules.v1.json"
+    },
+    "production": {
+      "kind": "previous_selected_code_review",
+      "functions": [
+        4134,
+        4139,
+        4293,
+        4294,
+        4295,
+        4296,
+        4297,
+        3239,
+        13511,
+        13460
+      ],
+      "summary": "Eligibility, dynamic base, bonuses/maluses, aggregate cache and settlement are separate. No persistent per-unit final-income table was established in inspected objects; getters are not executed.",
+      "public_reference": "../../docs/UNIT_PRODUCTION_LIMITS.md"
+    },
+    "construction": {
+      "kind": "selected_code_review; payment anchor rechecked offline 2026-10-27",
+      "functions": [
+        4935,
+        4957,
+        4933,
+        5986,
+        5987,
+        15064,
+        36994,
+        36995,
+        36996,
+        5928
+      ],
+      "summary": "startBuilding #4957 gets a state-dependent cost and calls useResources before building creation. Construction progress and effective production are later stages; full scheduler, cancel/refund and worker-count timing are not modeled.",
+      "public_reference": "../../docs/MECHANICS_EVIDENCE.md"
+    },
+    "colonization": {
+      "kind": "previous_selected_code_review",
+      "functions": [
+        14618,
+        14619,
+        14623,
+        14624
+      ],
+      "summary": "Payment resource legality, price, start/payment, ownership completion and cancellation require separate evidence. Raven Money colonization is a clan-specific legal path, not a universal Food/Money exchange.",
+      "public_reference": "../../docs/MECHANICS_EVIDENCE.md"
+    },
+    "recruitment": {
+      "kind": "installed configuration and selected code anchors rechecked offline 2026-10-27",
+      "configuration": [
+        "unit.Maiden02.props.recruitCost",
+        "unit.BearMaiden.props.recruitCost"
+      ],
+      "functions": [
+        16820,
+        5022,
+        5026,
+        5031,
+        16734
+      ],
+      "summary": "The installed base vectors are hero 150 Money/5 Iron and Kaija 40 Food/40 Money. getWarchiefCost #5022 has free/recruit/death and other dynamic branches; hireHero #5031 checks legality, pays via useResources, then spawns. A base vector is not a paid receipt.",
+      "public_reference": "../../docs/CLAN_STRATEGY_CASES.zh-CN.md"
+    },
+    "building_upgrades": {
+      "kind": "installed configuration and price source rechecked offline 2026-10-27",
+      "configuration": [
+        "building.TownHall.upgrades[0].cost",
+        "building.ScoutCamp.upgrades[0].cost"
+      ],
+      "functions": [
+        5818,
+        13489
+      ],
+      "summary": "TownHall base upgrade is 100 Wood/50 Money/10 Stone; ScoutCamp base upgrade is 50 Wood/50 Money/5 Stone. getUpgradeCost #5818 reads the selected upgrade cost and then has current-state modifications, including Upgrades knowledge. Full price and finish-time models are not supplied.",
+      "public_reference": "../../docs/CLAN_STRATEGY_CASES.zh-CN.md"
+    },
+    "forge": {
+      "kind": "installed constants and selected code anchors rechecked offline 2026-10-27",
+      "configuration": [
+        "cst.WeaponIron=5",
+        "cst.WeaponKrowns=50",
+        "cst.RelicIron=10",
+        "cst.RelicKrowns=100",
+        "cst.RelicWood=50"
+      ],
+      "functions": [
+        16591,
+        13223,
+        13225,
+        13235,
+        13355,
+        13356,
+        13405
+      ],
+      "instruction_anchors": [
+        "#16591 op730-754 weapon-vector initialization",
+        "#16591 op755-788 relic-vector initialization",
+        "#13223 op9-39 ShieldBearer/ShieldMaster empty cost",
+        "#13355 op30-32 ForgeItem creation and start",
+        "#13235 op7-11 relic price and payment"
+      ],
+      "summary": "Ordinary constants form weapon 5 Iron/50 Money and relic 10 Iron/100 Money/50 Wood vectors. Effective ShieldMaster can return an empty ShieldBearer weapon resource vector. Forge projects and their time path still exist. Relic and weapon price getters retain dynamic branches; special forge modes are excluded.",
+      "public_reference": "../../docs/CLAN_STRATEGY_CASES.zh-CN.md"
+    },
+    "bear_capabilities": {
+      "kind": "previous_selected_code_review",
+      "functions": [
+        13741,
+        16066,
+        4118,
+        4295,
+        13090,
+        15131,
+        16092,
+        33902,
+        33911
+      ],
+      "summary": "Bear fishing/food and recovery require the inspected non-sea Shoal and ability/zone conditions. 200-fame local production sources are alternatives, not repeated stacks. Kaija enemy-territory passage and relic hero effects have separate guards.",
+      "public_reference": "../../docs/CLAN_STRATEGY_CASES.zh-CN.md"
+    },
+    "growth": {
+      "kind": "previous_selected_code_review_and_capture_semantics",
+      "functions": [
+        38404,
+        38419,
+        13473,
+        13489,
+        13490,
+        13509,
+        13559,
+        21080
+      ],
+      "summary": "Ordinary Bear/Raven singleplayer FreeForAll uses sqrt(H)*complete growthBonus for H>0 and the inspected threshold 55+5P. TownHall progress, stored resource-component growth, threshold crossing and actual birth are different; complete bonus and birth gating remain incomplete.",
+      "public_reference": "../../docs/GROWTH_AND_TRANSITIONS.md"
+    },
+    "mining": {
+      "kind": "previous_selected_code_review",
+      "functions": [
+        5855,
+        22437
+      ],
+      "summary": "Miners contribute to shared deposit progress; crossing extraction conditions gives discrete resource credit. The full carry/leave/depletion and multi-miner boundary is not live-validated.",
+      "public_reference": "../../docs/MECHANICS_EVIDENCE.md"
+    },
+    "knowledge": {
+      "kind": "previous_selected_code_review_and_current_Bear_configuration",
+      "functions": [
+        13059,
+        13060,
+        13073,
+        13075,
+        13076,
+        13086,
+        13187
+      ],
+      "summary": "Knowledge has prerequisites, category/mode-dependent costs and alternate acquisition/effective providers. A researched scalar entry, a legal current purchase, a fame reward and effective hasTech are not interchangeable.",
+      "public_reference": "../../docs/CLAN_STRATEGY_CASES.zh-CN.md"
+    }
+  },
+  "construction_stage_vocabulary": [
+    {
+      "id": "order_quote",
+      "meaning": "legal order and full current quote are evaluated"
+    },
+    {
+      "id": "payment",
+      "meaning": "accepted order consumes the applicable resource vector"
+    },
+    {
+      "id": "project_created",
+      "meaning": "foundation or upgrade/forge project exists; capability is not yet assumed"
+    },
+    {
+      "id": "builder_approach_and_work",
+      "meaning": "builder task, approach and actual construction work; no fixed worker-to-time formula supplied"
+    },
+    {
+      "id": "completed",
+      "meaning": "project completion is observed or otherwise established"
+    },
+    {
+      "id": "production_assignment",
+      "meaning": "worker is assigned to the intended production job/building"
+    },
+    {
+      "id": "approach_and_occupation",
+      "meaning": "travel, task and occupation transitions; assignment may precede completion and stages may overlap"
+    },
+    {
+      "id": "production_eligible",
+      "meaning": "all relevant eligibility and effective modifier inputs are satisfied"
+    },
+    {
+      "id": "aggregate_rate_updated",
+      "meaning": "the relevant native player-rate cache incorporates production"
+    },
+    {
+      "id": "stock_credited",
+      "meaning": "resource-specific integration or discrete extraction has credited stock, after separate payments and clipping"
+    }
+  ],
+  "cards": [
+    {
+      "id": "labor.existing_reassignment",
+      "title_zh": "现有人口转岗：比较失去的原岗与获得的新岗",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "cost_note": "There is no universal job-change price in this card. Any actual recruitment or operation charge must be identified separately.",
+      "input_state": [
+        "same unit UID",
+        "old/new job and assignment",
+        "housing population and consumer weights",
+        "task/location/status/effects",
+        "season and effective tech/tools/local modifiers"
+      ],
+      "conditional_rule": "Delta resource rate = new gross production - old gross production - (new consumption - old consumption). Common consumption cancels only when equal-consumption status is established.",
+      "labor_and_time": "Separate assignment window, approach/task changes, occupation change, candidate production and aggregate cache update. Transition cost is an interval of lost or changed labor, not automatically zero production or pure walking time.",
+      "capability": [
+        "different resource flow",
+        "construction/scouting/military/other task capacity where eligible"
+      ],
+      "unknowns": [
+        "complete canProduce and modifiers",
+        "native individual settlement",
+        "current direct payment if any",
+        "exact transition or cache delay"
+      ],
+      "must_not_infer": [
+        "occupation change proves stock credit",
+        "every Move task stops work",
+        "deduct the same worker's unchanged food bill twice"
+      ],
+      "source_refs": [
+        "population_food",
+        "production"
+      ]
+    },
+    {
+      "id": "population.additional_person",
+      "title_zh": "新增人口：新增劳动之前还有增长、住房和全体消费",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "conditional_rule": "Only under the homogeneous ordinary-food conditions in rules.v1.json, with unit-weight sum=P and outer consumption factors one: b(P)=0.1*(1+sqrt(P/46)), C(P)=P*b(P); one extra ordinary member changes total consumption by C(P+1)-C(P), not only b(P+1). Actual consumers and WinterFestival or other modifiers require separate eligibility, weights and factors.",
+      "input_state": [
+        "verified housing population",
+        "housing capacity",
+        "happiness and complete growth modifiers",
+        "TownHall growth progress",
+        "birth eligibility",
+        "new unit consumption/production eligibility"
+      ],
+      "stages": [
+        "growth conditions satisfied",
+        "TownHall progress accumulates",
+        "threshold reached",
+        "birth permitted",
+        "new UID appears",
+        "assigned/arrives/effective labor"
+      ],
+      "capability": [
+        "future worker or military conversion option"
+      ],
+      "continuing_burden": [
+        "additional total food consumption",
+        "heating where eligible",
+        "housing and happiness requirements"
+      ],
+      "unknowns": [
+        "complete growthBonus",
+        "all birth blockers",
+        "exact birth time",
+        "future role and useful labor interval"
+      ],
+      "must_not_infer": [
+        "population_cache is housing population",
+        "all entities consume or occupy housing equally",
+        "full progress guarantees immediate birth",
+        "happiness is a spendable stock"
+      ],
+      "source_refs": [
+        "population_food",
+        "growth"
+      ]
+    },
+    {
+      "id": "building.production_pipeline",
+      "title_zh": "生产建筑：材料下单还没有变成产能",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "input_state": [
+        "legal known tile and slots",
+        "building kind and current quote",
+        "builder UID and task",
+        "construction/completion state",
+        "staffing capacity",
+        "production assignment and eligibility"
+      ],
+      "stages": [
+        "order_quote",
+        "payment",
+        "project_created",
+        "builder_approach_and_work",
+        "completed",
+        "production_assignment",
+        "approach_and_occupation",
+        "production_eligible",
+        "aggregate_rate_updated",
+        "stock_credited"
+      ],
+      "stage_order_note": "This is an explanatory dependency chain, not a claim that every milestone is separately sampled or strictly ordered; production assignment and approach can overlap construction.",
+      "capability": [
+        "work slots and a legal production path after completion and staffing"
+      ],
+      "continuing_burden": [
+        "maintenance where applicable",
+        "occupied tile/slot",
+        "workers diverted from other work"
+      ],
+      "unknowns": [
+        "full dynamic price",
+        "multi-worker work curve and scheduling",
+        "cancel/refund branches",
+        "effective production start",
+        "complete maintenance modifiers"
+      ],
+      "must_not_infer": [
+        "building order or completion equals immediate full output",
+        "construction time is wall-clock time",
+        "double-count labor opportunity cost already represented by flow changes"
+      ],
+      "source_refs": [
+        "construction",
+        "production"
+      ]
+    },
+    {
+      "id": "land.colonization",
+      "title_zh": "殖民：资源换可用土地与后续行动入口",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "input_state": [
+        "own-perspective known target and connection",
+        "ownership and clearance/legality",
+        "allowed payment resource",
+        "current quote and modifier inputs"
+      ],
+      "stages": [
+        "known opportunity",
+        "legality and quote",
+        "start/payment",
+        "colonization progress",
+        "ownership completion",
+        "subsequent construction/access",
+        "staffing and effective use"
+      ],
+      "capability": [
+        "resource/building slots where present",
+        "route or strategic position",
+        "future production options"
+      ],
+      "clan_difference": "Raven can have a legal Money-colonization branch; do not extrapolate it to Bear or treat it as a permanent exchange rate.",
+      "unknowns": [
+        "complete dynamic quote",
+        "special tile/mode branches",
+        "current traversability",
+        "all cancellation/refund conditions",
+        "future benefit without actual follow-up use"
+      ],
+      "must_not_infer": [
+        "an already-owned tile pays a new colonization fee",
+        "a known resource icon proves a usable staffed economy",
+        "unexplored tiles have known hidden contents"
+      ],
+      "source_refs": [
+        "colonization",
+        "construction"
+      ]
+    },
+    {
+      "id": "bear.hero_recruitment",
+      "title_zh": "熊族英雄：5铁是基础预算，实付仍需单独证明",
+      "clans": [
+        "Bear"
+      ],
+      "base_cost": {
+        "Money": 150,
+        "Iron": 5
+      },
+      "base_cost_kind": "unit.Maiden02.props.recruitCost",
+      "conditional_quote": null,
+      "input_state": [
+        "effective Bear hero kind",
+        "eligible owned hire building",
+        "canHireHero state",
+        "free/recruit/death/cooldown and other quote inputs",
+        "resources"
+      ],
+      "stages": [
+        "legality and full quote",
+        "payment",
+        "spawn",
+        "movement/action/recovery",
+        "effective clearing or combat"
+      ],
+      "labor_and_time": "The checked hireHero spawn path does not convert an assigned villager into the hero. Housing/consumption eligibility, production support and combat time remain separate rules.",
+      "capability": [
+        "clearing, tanking and combat where legal",
+        "conditional local Bear production support with effective fame reward"
+      ],
+      "unknowns": [
+        "final current-state quote",
+        "actual paid vector",
+        "full cooldown/re-recruit behavior",
+        "combat/recovery outcome",
+        "effective economic contribution"
+      ],
+      "must_not_infer": [
+        "a 5-Iron base row is an observed quote or paid receipt",
+        "hero and ShieldBearer are the same recruitable unit",
+        "base price proves the whole route is affordable"
+      ],
+      "source_refs": [
+        "recruitment",
+        "bear_capabilities"
+      ],
+      "unresolved_cost_discrepancy": {
+        "configured_base_iron": 5,
+        "reported_iron_recollection": 10,
+        "live_quote": null,
+        "live_payment": null,
+        "status": "pending_normal_match_quote_and_payment",
+        "does_not_establish": "that either number is the observed price of the next live recruitment"
+      }
+    },
+    {
+      "id": "bear.kaija_recruitment",
+      "title_zh": "召唤Kaija：不直接抽走村民，但有前置和使用成本",
+      "clans": [
+        "Bear"
+      ],
+      "base_cost": {
+        "Food": 40,
+        "Money": 40
+      },
+      "base_cost_kind": "unit.BearMaiden.props.recruitCost",
+      "conditional_quote": null,
+      "input_state": [
+        "eligible military building and recruitment state",
+        "resources",
+        "known clearing targets",
+        "health/location",
+        "fish-ability and zone conditions"
+      ],
+      "stages": [
+        "legal quote",
+        "payment",
+        "spawn",
+        "approach/clearing",
+        "recovery or other use"
+      ],
+      "labor_and_time": "Summon/spawn is not an ordinary villager reassignment. Military-building materials, construction, upkeep, travel and recovery still require accounting.",
+      "capability": [
+        "early clearing/tanking",
+        "conditional fish-zone food and recovery",
+        "conditional local production support after effective fame reward"
+      ],
+      "conditions": [
+        "inspected fish ability needs a same-zone non-sea Shoal and non-warring zone plus general ability gates",
+        "enemy-territory passage has a separate BearAwake gate"
+      ],
+      "unknowns": [
+        "full current quote/legality",
+        "actual paid vector",
+        "combat and recovery time",
+        "foregone fish-zone food during travel"
+      ],
+      "must_not_infer": [
+        "any coast is a qualifying fish tile",
+        "clearing has no opportunity cost",
+        "Kaija always counts as ordinary population or a food worker"
+      ],
+      "source_refs": [
+        "recruitment",
+        "bear_capabilities",
+        "population_food"
+      ]
+    },
+    {
+      "id": "building.townhall_upgrade",
+      "title_zh": "市政厅升级：石木钱换后续升级与人口供给条件",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": {
+        "Wood": 100,
+        "Money": 50,
+        "Stone": 10
+      },
+      "base_cost_kind": "building.TownHall.upgrades[0].cost",
+      "conditional_quote": null,
+      "input_state": [
+        "owned ordinary TownHall and current upgrade level",
+        "upgrade legality",
+        "current cost modifiers",
+        "resources",
+        "housing/happiness/growth and birth gates"
+      ],
+      "stages": [
+        "legal current quote",
+        "payment/upgrade start",
+        "completion/effective upgrade state",
+        "new capacity/growth and subsequent upgrade options",
+        "actual birth or follow-up investment"
+      ],
+      "capability": [
+        "ordinary follow-up building-upgrade prerequisite",
+        "changed housing/growth parameters where applicable"
+      ],
+      "unknowns": [
+        "final modified quote",
+        "upgrade completion timing",
+        "complete growthBonus",
+        "actual extra births or downstream production"
+      ],
+      "must_not_infer": [
+        "paying for capacity produces an immediate worker",
+        "configured growth changes alone guarantee an ETA",
+        "base cost includes every downstream upgrade"
+      ],
+      "source_refs": [
+        "building_upgrades",
+        "growth"
+      ]
+    },
+    {
+      "id": "building.scoutcamp_upgrade",
+      "title_zh": "侦察营升级：5石换更高侦察能力与敌境入口",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": {
+        "Wood": 50,
+        "Money": 50,
+        "Stone": 5
+      },
+      "base_cost_kind": "building.ScoutCamp.upgrades[0].cost",
+      "conditional_quote": null,
+      "input_state": [
+        "eligible owned ScoutCamp",
+        "upstream upgrade prerequisites",
+        "current quote and resources",
+        "effective scouts, target, route and scouting gates"
+      ],
+      "stages": [
+        "legal current quote",
+        "payment/upgrade",
+        "effective completion",
+        "scout assignment/approach",
+        "valid scouting",
+        "useful information arrives"
+      ],
+      "capability": [
+        "configured improved scouting and enemy-territory scouting entry where legal"
+      ],
+      "unknowns": [
+        "final current-state quote",
+        "completion and scouting time",
+        "target/path legality",
+        "whether information arrives by the team's action deadline"
+      ],
+      "must_not_infer": [
+        "upgrade scouts the enemy automatically",
+        "vision benefit is fully represented in own resource stocks",
+        "this card establishes multiplayer stability"
+      ],
+      "source_refs": [
+        "building_upgrades",
+        "production"
+      ]
+    },
+    {
+      "id": "bear.shieldmaster_weapon",
+      "title_zh": "精通盾牌：盾兵武器资源费免除，锻造仍需完成",
+      "clans": [
+        "Bear"
+      ],
+      "base_cost": {
+        "Iron": 5,
+        "Money": 50
+      },
+      "base_cost_kind": "ordinary weapon constants; separate from unit recruitment price",
+      "conditional_quote": {
+        "resource_vector": {},
+        "conditions": [
+          "requested military upgrade kind is ShieldBearer",
+          "effective ShieldMaster in the inspected branch",
+          "all remaining upgrade/forge prerequisites checked separately"
+        ],
+        "explanation": "#13223 op9-39 returns an empty resource-cost vector; not a UI observation",
+        "source_refs": [
+          "forge"
+        ]
+      },
+      "input_state": [
+        "effective knowledge rather than only a tree label",
+        "legal upgrade/forge project",
+        "facility, queue, workers and project state"
+      ],
+      "stages": [
+        "legal upgrade",
+        "resource-cost branch",
+        "ForgeItem creation",
+        "queue/start",
+        "effective forge work",
+        "completion",
+        "upgrade effect becomes applicable"
+      ],
+      "capability": [
+        "completed ShieldBearer weapon upgrade where applicable"
+      ],
+      "labor_and_time": "ForgeItem creation/start and forgeTotalTime remain in the inspected path. No complete worker/scheduler/time prediction is supplied.",
+      "unknowns": [
+        "actual project start/completion",
+        "full forge workforce and queue timing",
+        "all alternate free/discount/mode branches",
+        "final combat effect"
+      ],
+      "must_not_infer": [
+        "no forge facility needed",
+        "no workers or time needed",
+        "free resource charge means the upgrade already exists",
+        "hero recruitment or every weapon is free"
+      ],
+      "source_refs": [
+        "forge",
+        "knowledge"
+      ]
+    },
+    {
+      "id": "bear.relic_forge",
+      "title_zh": "熊族圣物：基础还需10铁，并与其他锻造争用设施和时间",
+      "clans": [
+        "Bear"
+      ],
+      "base_cost": {
+        "Wood": 50,
+        "Money": 100,
+        "Iron": 10
+      },
+      "base_cost_kind": "ordinary COST_FORGE_RELIC initialized from RelicWood/RelicKrowns/RelicIron",
+      "conditional_quote": null,
+      "input_state": [
+        "legal uncompleted Bear relic project",
+        "facility and queue",
+        "current relic cost modifiers",
+        "resources",
+        "workers/project state",
+        "hero and relic activation conditions"
+      ],
+      "stages": [
+        "legal full quote",
+        "payment",
+        "ForgeItem creation/queue",
+        "effective forge work",
+        "completion",
+        "placement/activation where required",
+        "eligible hero effect"
+      ],
+      "capability": [
+        "relic-specific hero ability/effects only when their own conditions hold"
+      ],
+      "labor_and_time": "The 10 Iron is one component of a 50 Wood/100 Money/10 Iron ordinary base vector; facilities, labor, queue and time are additional investments.",
+      "unknowns": [
+        "final current-state quote",
+        "actual paid vector",
+        "complete forge/activation timing",
+        "combat and recovery benefit"
+      ],
+      "must_not_infer": [
+        "relic costs only 10 Iron",
+        "10 Iron includes the hero's separate 5 Iron",
+        "all ShieldBearers get the hero relic effect",
+        "slow coefficients imply total immobility"
+      ],
+      "source_refs": [
+        "forge",
+        "bear_capabilities"
+      ]
+    },
+    {
+      "id": "mining.deposit_to_stock",
+      "title_zh": "采矿：工人先积累共享矿藏进度，再离散入库",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "input_state": [
+        "known legal deposit and remaining quantity",
+        "own mine/project state",
+        "miner assignment and eligibility",
+        "shared progress",
+        "extraction and stock state"
+      ],
+      "stages": [
+        "deposit access",
+        "mine construction",
+        "miners assigned/arrive",
+        "shared work progress",
+        "extraction condition",
+        "resource credited",
+        "upgrade/hero/forge payment"
+      ],
+      "credited_amount": null,
+      "completion_time": null,
+      "capability": [
+        "limited Stone/Iron inventory enabling specific downstream investments"
+      ],
+      "unknowns": [
+        "multi-miner/carry/departure boundaries",
+        "depletion and remainder handling in all states",
+        "current effective worker rate",
+        "resource-cap or interruption effects"
+      ],
+      "must_not_infer": [
+        "fractional progress is already paid ore",
+        "each miner owns the shared progress separately",
+        "fixed q times duration is an exact individual ore receipt"
+      ],
+      "source_refs": [
+        "mining",
+        "production"
+      ]
+    },
+    {
+      "id": "knowledge.resource_to_effect",
+      "title_zh": "知识：达到门槛并合法获得后，才可能改变指定能力",
+      "clans": [
+        "Bear",
+        "Raven"
+      ],
+      "base_cost": null,
+      "input_state": [
+        "clan-resolved tree and prerequisites",
+        "knowledge stock",
+        "category/paid count and free-acquisition state",
+        "current mode/price inputs",
+        "effective providers",
+        "target workers/buildings/abilities"
+      ],
+      "stages": [
+        "knowledge production or event credit",
+        "full legal quote",
+        "purchase or other lawful acquisition",
+        "effective knowledge",
+        "relevant targets/conditions",
+        "changed rate/capacity/cost/ability"
+      ],
+      "current_quote": null,
+      "capability": [
+        "node-specific economic or military rule change",
+        "new route or action where legal"
+      ],
+      "unknowns": [
+        "complete current-state cost and acquisition coverage",
+        "all special hasTech providers",
+        "knowledge arrival time",
+        "optimal route given map/role/pressure"
+      ],
+      "must_not_infer": [
+        "every tech-table row is a paid ordinary knowledge",
+        "Fame reward is manually purchased",
+        "tree existence or stored entry proves every effect is active",
+        "a fixed list of node names guarantees a date or best order"
+      ],
+      "source_refs": [
+        "knowledge",
+        "production",
+        "growth"
+      ]
+    }
+  ],
+  "verification_summary": {
+    "configuration_recheck": "Six cost groups were reread from the fingerprint-matched local PAK; weapon/relic constant-vector initialization and selected price/payment/project anchors were independently checked in the fingerprint-matched bytecode.",
+    "private_evidence_policy": "Detailed local receipts are retained privately. This catalog publishes only curated numeric facts, source/function identifiers, scope and unresolved conditions; no full definitions, disassembly, machine paths or actual captures.",
+    "controlled_live_validation": "not_established_by_this_catalog",
+    "does_not_modify_collector_native_fields": true
+  },
+  "not_a_runtime_decoder": true,
+  "evidence_policy": {
+    "null_is_not_zero": true,
+    "model_outputs_are_native_measurements": false,
+    "input_context_is_automatically_verified": false,
+    "base_quote_payment_completion_are_distinct": true
+  }
+}

@@ -20,6 +20,15 @@ import zipfile
 VERSION = "0.5.1"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'docs/MECHANICS_REFERENCE.zh-CN.md',
+    'docs/POPULATION_ECONOMY.zh-CN.md',
+    'docs/JOBS_REFERENCE.zh-CN.md',
+    'docs/ECONOMIC_CONVERSIONS.zh-CN.md',
+    'docs/BEAR_KNOWLEDGE_REFERENCE.zh-CN.md',
+    'mechanics/catalog/population_economy.v1.json',
+    'mechanics/catalog/common_jobs.v1.json',
+    'mechanics/catalog/conversions.v1.json',
+    'mechanics/catalog/bear_knowledge.v1.json',
     'mechanics/baseline.py',
     'mechanics/test_baseline.py',
     'mechanics/rules.v1.json',

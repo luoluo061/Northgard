@@ -6,7 +6,9 @@
 
 具体研究见[熊、乌鸦与猞猁的战略因果案例](docs/CLAN_STRATEGY_CASES.zh-CN.md)：以真实文字路线反查当前知识前置、5铁15石预算、熊的恢复与区域布局、港口工作互斥、乌鸦转军加成、持续雇佣兵钱耗和猞猁盛宴状态。每项分别保留当前代码、条件演算、玩家经验及失败条件。
 
-研究顺序现调整为：**统一口径 → 人口与资源运转 → 能力转换 → 氏族的发展路线 → 结合局面形成目标 → 比较操作**。每层先核规则，再做小实验和采集对账。先读[具体研究任务与首批人口表](docs/MECHANICS_RESEARCH_PROGRAM.zh-CN.md)、[机制框架](docs/MECHANICS_FRAMEWORK.zh-CN.md)、[规则证据](docs/MECHANICS_EVIDENCE.md)与[验证计划](docs/MECHANICS_VALIDATION_PLAN.md)。[条件基线计算器](mechanics/README.md)已能计算普通熊／乌鸦同质人口的食物预算；它与采集器分开，不是完整模拟器或原生逐人实产。
+研究顺序现调整为：**统一口径 → 人口与资源运转 → 能力转换 → 氏族的发展路线 → 结合局面形成目标 → 比较操作**。当前资料从[机制资料入口与覆盖表](docs/MECHANICS_REFERENCE.zh-CN.md)阅读：包含[人口食耗与调岗](docs/POPULATION_ECONOMY.zh-CN.md)、[岗位基础渠道](docs/JOBS_REFERENCE.zh-CN.md)、[经济与能力转换](docs/ECONOMIC_CONVERSIONS.zh-CN.md)和[熊族知识树](docs/BEAR_KNOWLEDGE_REFERENCE.zh-CN.md)，并在`mechanics/catalog/`提供可复查的结构化卡片。基础配置、代码推导、条件计算与实局验证分别标记，未完成项不填零。
+
+每层的后续工作见[具体研究任务](docs/MECHANICS_RESEARCH_PROGRAM.zh-CN.md)、[机制框架](docs/MECHANICS_FRAMEWORK.zh-CN.md)、[规则证据](docs/MECHANICS_EVIDENCE.md)与[验证计划](docs/MECHANICS_VALIDATION_PLAN.md)。[条件基线计算器](mechanics/README.md)已能计算普通熊／乌鸦同质人口的食物预算；它与采集器分开，不是完整模拟器或原生逐人实产。
 
 本项目通过只读本地游戏进程获取状态，无需截图或 OCR。当前为 **0.5.1-alpha 准备版**，包含**基地已探索一环／二环及本方用工、建筑的关联**，并保留 **3v3 本人视角实验采集与多人对局关联**。环层已有单人短段读取检查；完整窗口和真实3v3尚未验收。本版修复Windows快照文件被读锁时导致采集退出的问题。具体状态见 [验证记录](docs/VALIDATION_STATUS.md)。
 
@@ -35,7 +37,7 @@ python scripts/doctor.py
 python scripts/setup_local.py --game-dir "D:\SteamLibrary\steamapps\common\Northgard"
 ```
 
-目录应是自己的实际安装位置。当前仅接受已核对的 `v4.3.29.43387 / Steam Build 25096976` 及对应 `hlboot.dat`、`data.cdb` 双指纹。游戏更新后不匹配就停止，不修改哈希绕过。`doctor` 的 `ready_for_local_test` 表示安装准备完成，不代表已经读到一局。
+目录应是自己的实际安装位置。当前仅接受已核对的 `v4.3.29.43337 / Steam Build 25096976` 及对应 `hlboot.dat`、`data.cdb` 双指纹。游戏更新后不匹配就停止，不修改哈希绕过。`doctor` 的 `ready_for_local_test` 表示安装准备完成，不代表已经读到一局。
 
 ## 3v3 怎样开始
 

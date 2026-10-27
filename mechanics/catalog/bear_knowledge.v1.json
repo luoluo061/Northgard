@@ -1,0 +1,1919 @@
+{
+  "schema_version": 1,
+  "catalog_id": "bear_knowledge.v1",
+  "review_date": "2026-10-27",
+  "build": {
+    "steam_build": "25096976",
+    "game_version": "v4.3.29.43337",
+    "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+    "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+  },
+  "scope": {
+    "clan": "Bear",
+    "resolved_base_tree": "Vikings",
+    "ordinary_knowledge_count": 21,
+    "applies_to": "ordinary Bear knowledge-tree topology and selected current rule branches",
+    "not_generalized_to": [
+      "Bifrost/Conquest/scripted or special-rule trees",
+      "all multiplayer prices/economics",
+      "other clans",
+      "optimal build orders",
+      "native per-unit actual-income measurement"
+    ]
+  },
+  "evidence_level": "configuration_and_selected_code_not_controlled_live_validated",
+  "controlled_live_validation": "not_run",
+  "publication_note": "Curated paraphrases, selected numeric facts and function references only; no raw assets, complete game tables, saves, personal captures or bytecode included.",
+  "source_convention": {
+    "configuration_refs": "Selected fields in the installed PAK data.cdb matching build.data_cdb_sha256; names such as tech.Harpoons are table/row IDs, not distributed source files.",
+    "function_ids": "Compiled hlboot.dat function indices for build.hlboot_sha256 only; gated topology references do not imply that every effect has been fully decoded.",
+    "related_public_docs": [
+      "docs/MECHANICS_EVIDENCE.md",
+      "docs/CLAN_STRATEGY_CASES.zh-CN.md",
+      "docs/STRATEGY_ROLES_AND_GUIDES.zh-CN.md",
+      "mechanics/rules.v1.json"
+    ]
+  },
+  "prerequisite_model": {
+    "id": "ordinary_bear_previous_tier_any",
+    "operator": "OR_within_previous_tier_same_branch",
+    "meaning_zh": "t0无树内前置；t1/t2/t3要求同一分支上一层至少一个有效前置。上下两项可都学，不是互斥选择。",
+    "function_ids": [
+      13086,
+      25200,
+      25191
+    ],
+    "configuration_refs": [
+      "techTree.Vikings",
+      "clan.Bear.specificTechs"
+    ],
+    "exceptions_not_applied": [
+      "freeTechPending/nonBlockingFreeTech paths",
+      "stolenTechs",
+      "Bifrost replacements",
+      "Conquest bonuses such as BBarricades",
+      "scripted grants"
+    ],
+    "does_not_establish": "that a node is currently payable/allowed in a live match"
+  },
+  "replacement_map": [
+    {
+      "base_id": "Medecine",
+      "bear_id": "Hibernate"
+    },
+    {
+      "base_id": "Coats",
+      "bear_id": "LandProtect"
+    },
+    {
+      "base_id": "Security",
+      "bear_id": "ShieldMaster"
+    },
+    {
+      "base_id": "SlotGrowth",
+      "bear_id": "Harpoons"
+    },
+    {
+      "base_id": "Mining",
+      "bear_id": "WinterFestival"
+    }
+  ],
+  "dag": {
+    "node_ids": [
+      "Lumber",
+      "Weaponsmith",
+      "WinterFestival",
+      "Colonize",
+      "BetterSilo",
+      "LandProtect",
+      "Defense",
+      "Drakkars",
+      "Coinage",
+      "Recruit",
+      "Hibernate",
+      "MilitaryStrategy",
+      "ShieldMaster",
+      "Knowledge",
+      "Upgrades",
+      "HeartStone",
+      "Harpoons",
+      "Heroes",
+      "MonsterSlayer",
+      "Negociate",
+      "SlotWealth"
+    ],
+    "edges": [
+      {
+        "from": "Lumber",
+        "to": "Colonize",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Lumber",
+        "to": "BetterSilo",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Weaponsmith",
+        "to": "LandProtect",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Weaponsmith",
+        "to": "Defense",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "WinterFestival",
+        "to": "Drakkars",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "WinterFestival",
+        "to": "Coinage",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Colonize",
+        "to": "Recruit",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "BetterSilo",
+        "to": "Recruit",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Colonize",
+        "to": "Hibernate",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "BetterSilo",
+        "to": "Hibernate",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "LandProtect",
+        "to": "MilitaryStrategy",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Defense",
+        "to": "MilitaryStrategy",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "LandProtect",
+        "to": "ShieldMaster",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Defense",
+        "to": "ShieldMaster",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Drakkars",
+        "to": "Knowledge",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Coinage",
+        "to": "Knowledge",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Drakkars",
+        "to": "Upgrades",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Coinage",
+        "to": "Upgrades",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Recruit",
+        "to": "HeartStone",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Hibernate",
+        "to": "HeartStone",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Recruit",
+        "to": "Harpoons",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Hibernate",
+        "to": "Harpoons",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "MilitaryStrategy",
+        "to": "Heroes",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "ShieldMaster",
+        "to": "Heroes",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "MilitaryStrategy",
+        "to": "MonsterSlayer",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "ShieldMaster",
+        "to": "MonsterSlayer",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Knowledge",
+        "to": "Negociate",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Upgrades",
+        "to": "Negociate",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Knowledge",
+        "to": "SlotWealth",
+        "meaning": "one_of_incoming_edges_suffices"
+      },
+      {
+        "from": "Upgrades",
+        "to": "SlotWealth",
+        "meaning": "one_of_incoming_edges_suffices"
+      }
+    ]
+  },
+  "ordinary_knowledge_price": {
+    "price_is_not_fixed_per_node": true,
+    "ordinary_resource": "Lore",
+    "unmodified_expression": "10 * round((110 * 1.21**k - 30) / 10)",
+    "k_meaning_zh": "原生getTechCount在当前类别/规则和免费获得等条件下返回的计价次数；不是节点层数、全部tech对象数量或声望奖励数。",
+    "first_six_paid_costs_if_k_is_0_to_5": [
+      80,
+      100,
+      130,
+      160,
+      210,
+      260
+    ],
+    "first_four_total_if_k_is_0_to_3": 470,
+    "first_six_total_if_k_is_0_to_5": 940,
+    "dynamic_inputs_zh": [
+      "已学知识的类别和计价资格",
+      "免费知识及其标记",
+      "PurchaseTechWithKrowns/SplitLore/SacredLandsLore规则",
+      "合法前置、余额与实际支付资源"
+    ],
+    "function_ids": [
+      13073,
+      13074,
+      13075,
+      13076,
+      13187,
+      13066,
+      13067,
+      13068,
+      13095
+    ],
+    "configuration_refs": [
+      "cst.TechCostFactor"
+    ],
+    "configured_TechCostFactor": 1.21,
+    "quote_and_payment_zh": "局内真实报价和余额变化需分开记录；配置曲线和路线累计预算不能替代实际支付。正常unlockTech__impl会检查前置/支付，再进入doUnlockTech；直接脚本授予不等价。",
+    "controlled_live": "not_run"
+  },
+  "winter_rules": [
+    {
+      "id": "bear.base_winter_food_penalty",
+      "name_zh": "初始天赋：食物生产冬罚幅度",
+      "acquisition": "clan_starting_bonus",
+      "condition_zh": "熊族；冬季；符合已核Food生产冬罚路径；不是所有食物岗位通用率。",
+      "configured_value": 0.7,
+      "effect_zh": "将该层普通冬罚的幅度从1减至0.7，不直接减少普通单位食物消费。",
+      "sources": {
+        "configuration_refs": [
+          "clan.Bear.bonuses.CWinterMalusReduce"
+        ],
+        "function_ids": [
+          4296
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "bear.base_winter_heating_penalty",
+      "name_zh": "初始天赋：额外取暖冬耗幅度",
+      "acquisition": "clan_starting_bonus",
+      "condition_zh": "冬季；取暖资格人数、地块效果和外层消费条件仍须成立。",
+      "configured_value": 0.7,
+      "effect_zh": "进入额外冬耗幅度；总木耗不直接乘0.7。WinterFestival没有在该已核木耗分支直接提供另一份减免。",
+      "sources": {
+        "configuration_refs": [
+          "clan.Bear.bonuses.CWinterMalusReduce"
+        ],
+        "function_ids": [
+          38421,
+          3241
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "bear.winterfestival_food_consumption",
+      "name_zh": "冬节：普通单位食耗",
+      "acquisition": "ordinary_knowledge_WinterFestival",
+      "condition_zh": "有效hasTech(WinterFestival)且冬季；其他食耗豁免和倍数另核。",
+      "configured_reduction": 0.3,
+      "derived_multiplier": 0.7,
+      "effect_zh": "此项将单位食物消费倍数乘1−0.3。氏族身份和天赋0.7不能替代已取得该知识的证据。",
+      "sources": {
+        "configuration_refs": [
+          "tech.WinterFestival.values[id=0]"
+        ],
+        "function_ids": [
+          4523,
+          13059
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "bear.winterfestival_nonfood_production",
+      "name_zh": "冬节：非食物生产",
+      "acquisition": "ordinary_knowledge_WinterFestival",
+      "condition_zh": "有效WinterFestival、冬季、符合生产资格且资源不属于Food转换家族。",
+      "configured_factor": 1.15,
+      "derived_bonus_delta": 0.15,
+      "effect_zh": "在已核生产bonus层加0.15；不能再给粮、麦、肉或鱼添加这份收益，也不代表所有最终流量直接乘1.15。",
+      "sources": {
+        "configuration_refs": [
+          "tech.WinterFestival.values[id=3]",
+          "resource.*.props.converts"
+        ],
+        "function_ids": [
+          4295,
+          4298,
+          13059
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      }
+    }
+  ],
+  "winter_combination_examples": {
+    "evidence_level": "conditional_code_derived_not_native_measurement",
+    "conditions_zh": [
+      "普通熊族相关分支",
+      "无GreaterBlessings、餐食、Conquest、灾害、羊或其他修正",
+      "有效取得所列知识/祝福",
+      "食物公式只示普通村民Food路径"
+    ],
+    "food_penalty_amplitude": "s_food = clamp01(1 + (0.7-1) + optional(0.8-1, HeartStone) + optional(0.5-1, FreyaBlessing))",
+    "food_gatherer_example": "q_food = 0.4 * (1 + s_food * (max(0.6, 0.7-P/300)-1))",
+    "heating_penalty_amplitude": "s_wood = clamp01(1 + (0.7-1) + optional(0.5-1, HeartStone) + optional(0.85-1, FreyaBlessing))",
+    "heating_example": "C_wood = B * (1 + s_wood * (min(3.75 + 0.25*floor(game_time/720), 5)-1)); B=(0.02*n)^1.3 only if the stated homogeneous heating conditions hold",
+    "winterfestival_not_in_amplitudes": true,
+    "rows": [
+      {
+        "effective_effects": [],
+        "s_food": 0.7,
+        "s_wood": 0.7
+      },
+      {
+        "effective_effects": [
+          "HeartStone"
+        ],
+        "s_food": 0.5,
+        "s_wood": 0.2
+      },
+      {
+        "effective_effects": [
+          "FreyaBlessing"
+        ],
+        "s_food": 0.2,
+        "s_wood": 0.55
+      },
+      {
+        "effective_effects": [
+          "HeartStone",
+          "FreyaBlessing"
+        ],
+        "s_food": 0.0,
+        "s_wood": 0.05
+      }
+    ],
+    "function_ids": [
+      4296,
+      38421
+    ],
+    "configuration_refs": [
+      "clan.Bear.bonuses.CWinterMalusReduce",
+      "tech.HeartStone.values",
+      "tech.FreyaBlessing.values",
+      "cst.WoodConsumption"
+    ],
+    "limitations_zh": "只示已核合并层。n是取暖资格人数，不等于住房人口；农民冬季基础、鱼和其他岗位不能套普通采食者公式。此目录不扩展baseline.py的支持范围。"
+  },
+  "knowledge_nodes": [
+    {
+      "id": "Lumber",
+      "name_zh": "利斧",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 0,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "none",
+        "knowledge_ids": []
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 1,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "木工产木+20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.2
+        }
+      ],
+      "interpretation_limits_zh": "木工岗位实际生效人数、其他生产加减成和投产时间仍须观测。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Lumber.values",
+          "tech.Lumber.desc",
+          "techTree.Vikings.t0.growth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": true,
+        "ui_tree_presence_observed": true
+      },
+      "ui_effect_cross_check": {
+        "reported_percent": 20,
+        "configured_percent": 20,
+        "status": "matches_user_supplied_tooltip"
+      }
+    },
+    {
+      "id": "Weaponsmith",
+      "name_zh": "武器匠",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 0,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "none",
+        "knowledge_ids": []
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 1,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "全体军事单位攻击力+15%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.15
+        }
+      ],
+      "interpretation_limits_zh": "当前配置为15%；不是旧攻略中的20%。攻击加成不是最终伤害或DPS的等比例保证。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Weaponsmith.values",
+          "tech.Weaponsmith.desc",
+          "techTree.Vikings.t0.might"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "WinterFestival",
+      "name_zh": "冬节",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 0,
+      "replaces_base_id": "Mining",
+      "prerequisites": {
+        "operator": "none",
+        "knowledge_ids": []
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 1,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "冬季食物消耗−30%，非食物生产+15%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.3
+        },
+        {
+          "value_id": 3,
+          "configured_value": 1.15
+        }
+      ],
+      "interpretation_limits_zh": "需已有效取得且为冬季；不由Bear身份自动推定。麦、肉、鱼均属于Food家族，不加非Food的15%。",
+      "sources": {
+        "configuration_refs": [
+          "tech.WinterFestival.values",
+          "tech.WinterFestival.desc",
+          "techTree.Vikings.t0.wealth",
+          "clan.Bear.specificTechs"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          4523,
+          4295,
+          13059
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Colonize",
+      "name_zh": "殖民",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 1,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Lumber"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "粮食殖民费用降低30%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.7,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "仅明确普通粮食殖民费用项；最终报价、合法性和特殊地块须另核，不能推到乌鸦金币殖民。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Colonize.values",
+          "tech.Colonize.desc",
+          "techTree.Vikings.t1.growth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "BetterSilo",
+      "name_zh": "根除",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 1,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Lumber"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "筒仓的食物生产加成+10%，升级费用降低50%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.1,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 5,
+          "configured_value": 0.5,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "数值属于筒仓生产/升级渠道；受益工人、筒仓布局和最终费用合并仍待闭合。",
+      "sources": {
+        "configuration_refs": [
+          "tech.BetterSilo.values",
+          "tech.BetterSilo.desc",
+          "techTree.Vikings.t1.growth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "LandProtect",
+      "name_zh": "土地保护者",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 1,
+      "replaces_base_id": "Coats",
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Weaponsmith"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "每块至少有一座军事营地的地块+1幸福。",
+      "configuration_parameters": [
+        {
+          "value_id": 1,
+          "configured_value": 1
+        }
+      ],
+      "interpretation_limits_zh": "按本方合格地块计数，同地块多个军营不会给此项重复加幸福。幸福增加不保证立即出生。",
+      "sources": {
+        "configuration_refs": [
+          "tech.LandProtect.values",
+          "tech.LandProtect.desc",
+          "techTree.Vikings.t1.might",
+          "clan.Bear.specificTechs"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          13090
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Defense",
+      "name_zh": "防御策略",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 1,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Weaponsmith"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "平民攻击力和防御塔抵抗+30%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.3
+        }
+      ],
+      "interpretation_limits_zh": "对象是平民攻击与塔抵抗；不能读成全军攻击或所有单位防御+30%。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Defense.values",
+          "tech.Defense.desc",
+          "techTree.Vikings.t1.might"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Drakkars",
+      "name_zh": "造船",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 1,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "WinterFestival"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "水手资源产出+25%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.25,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "有效水手生产bonus的加项；与冬节等已核同层项相加，不盲目连乘，也不证明船上一定在产金币。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Drakkars.values",
+          "tech.Drakkars.desc",
+          "techTree.Vikings.t1.wealth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          4295
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Coinage",
+      "name_zh": "造币",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 1,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "WinterFestival"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 2,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "商人金币产出+20%，并有贸易解锁属性。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.2
+        },
+        {
+          "value_id": 3,
+          "configured_value": 2
+        }
+      ],
+      "interpretation_limits_zh": "另有unlockTrading配置；具体可交易资源/对象和报价另核。unlockTrading=7不是“7条贸易路线”。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Coinage.values",
+          "tech.Coinage.desc",
+          "techTree.Vikings.t1.wealth",
+          "tech.Coinage.props.unlockTrading"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Recruit",
+      "name_zh": "招募",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 2,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Colonize",
+          "BetterSilo"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "人口增长永久+20%；被敌方氏族击杀或牺牲单位时另有每人+4%、持续4月、最高60%的项。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.2,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 3,
+          "configured_value": 0.04,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 4,
+          "configured_value": 4,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 12,
+          "configured_value": 0.6
+        }
+      ],
+      "interpretation_limits_zh": "额外增长的敌方氏族击杀/牺牲归因、持续期与全局增长合并尚未完整闭合，不能把所有死亡都算触发。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Recruit.values",
+          "tech.Recruit.desc",
+          "techTree.Vikings.t2.growth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Hibernate",
+      "name_zh": "冬眠",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 2,
+      "replaces_base_id": "Medecine",
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Colonize",
+          "BetterSilo"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "冬季非患病成员在盟友领土恢复生命。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.25
+        }
+      ],
+      "interpretation_limits_zh": "已核冬季、同队地块、非Sick分支，基础恢复1.25生命/游戏秒；不是鱼地回血，也不消除全年治疗需求。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Hibernate.values",
+          "tech.Hibernate.desc",
+          "techTree.Vikings.t2.growth",
+          "clan.Bear.specificTechs"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          4118
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "MilitaryStrategy",
+      "name_zh": "军事战略",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 2,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "LandProtect",
+          "Defense"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "每种同地块友军军事单位类型+4%攻击，上限20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.04,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 3,
+          "configured_value": 0.2
+        }
+      ],
+      "interpretation_limits_zh": "当前配置为每类型4%、最高20%；具体友军类型计数和最终伤害仍需核验，不以旧5%/25%代替。",
+      "sources": {
+        "configuration_refs": [
+          "tech.MilitaryStrategy.values",
+          "tech.MilitaryStrategy.desc",
+          "techTree.Vikings.t2.might"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "ShieldMaster",
+      "name_zh": "精通盾牌",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 2,
+      "replaces_base_id": "Security",
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "LandProtect",
+          "Defense"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "盾兵武器锻造免资源费；全军抵抗+5%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.05
+        }
+      ],
+      "interpretation_limits_zh": "盾兵武器资源费用走空向量；锻造项目、设施、调度和完成进度仍存在。+5%抵抗并非固定减伤5%。",
+      "sources": {
+        "configuration_refs": [
+          "tech.ShieldMaster.values",
+          "tech.ShieldMaster.desc",
+          "techTree.Vikings.t2.might",
+          "clan.Bear.specificTechs"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          13223,
+          13355,
+          13405,
+          33911
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Knowledge",
+      "name_zh": "博学",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 2,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Drakkars",
+          "Coinage"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "符文师产知识+40%；下一座刻石免费。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.4,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "下一座刻石免费是一次状态，不可按永久免费重复计算；完整符文师资格和费用状态另核。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Knowledge.values",
+          "tech.Knowledge.desc",
+          "techTree.Vikings.t2.wealth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Upgrades",
+      "name_zh": "精通木工",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 2,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Drakkars",
+          "Coinage"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 3,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "建筑升级费用降低20%；已升级建筑维护降低20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 5,
+          "configured_value": 0.8,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 0,
+          "configured_value": 0.8,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "20%维护优惠针对已升级建筑；不能扩成全部建筑维护。最终升级报价与其他修正另核。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Upgrades.values",
+          "tech.Upgrades.desc",
+          "techTree.Vikings.t2.wealth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "HeartStone",
+      "name_zh": "炉石",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 3,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Recruit",
+          "Hibernate"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "冬季额外柴火消耗降低50%，冬季食物产出惩罚降低20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.5
+        },
+        {
+          "value_id": 3,
+          "configured_value": 0.8
+        }
+      ],
+      "interpretation_limits_zh": "分别改变食物生产冬罚幅度与额外取暖冬耗幅度，不是全年总食耗减20%或总木耗直接乘0.5。",
+      "sources": {
+        "configuration_refs": [
+          "tech.HeartStone.values",
+          "tech.HeartStone.desc",
+          "techTree.Vikings.t3.growth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          4296,
+          38421
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Harpoons",
+      "name_zh": "鱼叉",
+      "kind": "ordinary_knowledge",
+      "branch": "growth",
+      "tier": 3,
+      "replaces_base_id": "SlotGrowth",
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Recruit",
+          "Hibernate"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "鱼产出+30%，可额外指派1名渔民。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.3,
+          "can_be_boosted_metadata": true,
+          "max_boost_metadata": 1.5
+        },
+        {
+          "value_id": 3,
+          "configured_value": 1
+        }
+      ],
+      "interpretation_limits_zh": "已核渔民产出和渔业岗位容量分支；需鱼源、设施、可指派人口及真实工作。配置有可强化元数据，不把1.3当所有模式最终常数。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Harpoons.values",
+          "tech.Harpoons.desc",
+          "techTree.Vikings.t3.growth",
+          "clan.Bear.specificTechs"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [
+          4295,
+          5816
+        ],
+        "effect_evidence_level": "selected_code_branches"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Heroes",
+      "name_zh": "传奇英雄",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 3,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "MilitaryStrategy",
+          "ShieldMaster"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "英雄攻击与防御+25%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.25,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "英雄对象与批量军事单位不同；不由此宣称所有军队攻防提高25%。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Heroes.values",
+          "tech.Heroes.desc",
+          "techTree.Vikings.t3.might"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "MonsterSlayer",
+      "name_zh": "怪物杀手",
+      "kind": "ordinary_knowledge",
+      "branch": "might",
+      "tier": 3,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "MilitaryStrategy",
+          "ShieldMaster"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "对龙类单位攻击+10%，对其他神秘生物+30%；击杀神秘生物军事经验+50%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.3,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 3,
+          "configured_value": 0.5,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 12,
+          "configured_value": 1.1
+        }
+      ],
+      "interpretation_limits_zh": "龙类/神秘生物资格及经验到账路径待核；不能用于对所有敌方军人加成。",
+      "sources": {
+        "configuration_refs": [
+          "tech.MonsterSlayer.values",
+          "tech.MonsterSlayer.desc",
+          "techTree.Vikings.t3.might"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "Negociate",
+      "name_zh": "谈判",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 3,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Knowledge",
+          "Upgrades"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "市场购买价格降低50%，补货加快20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.5,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 3,
+          "configured_value": 1.2,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "当前熊的普通Negociate与乌鸦Negociators是不同ID；市场买价与贸易卖价不是一套固定换算。",
+      "sources": {
+        "configuration_refs": [
+          "tech.Negociate.values",
+          "tech.Negociate.desc",
+          "techTree.Vikings.t3.wealth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    },
+    {
+      "id": "SlotWealth",
+      "name_zh": "商队",
+      "kind": "ordinary_knowledge",
+      "branch": "wealth",
+      "tier": 3,
+      "replaces_base_id": null,
+      "prerequisites": {
+        "operator": "any_of",
+        "knowledge_ids": [
+          "Knowledge",
+          "Upgrades"
+        ]
+      },
+      "ordinary_minimum_paid_nodes_from_empty": 4,
+      "cost_model_ref": "ordinary_knowledge_price",
+      "effect_summary_zh": "贸易路线金币+20%，与中立势力关系提升快20%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 1.2,
+          "can_be_boosted_metadata": false
+        },
+        {
+          "value_id": 3,
+          "configured_value": 1.2,
+          "can_be_boosted_metadata": false
+        }
+      ],
+      "interpretation_limits_zh": "贸易路线钱流、对中立关系增长是两个渠道；不能等同于所有商人金币产出再加20%。",
+      "sources": {
+        "configuration_refs": [
+          "tech.SlotWealth.values",
+          "tech.SlotWealth.desc",
+          "techTree.Vikings.t3.wealth"
+        ],
+        "prerequisite_function_ids": [
+          13086,
+          25200,
+          25191
+        ],
+        "effect_function_ids": [],
+        "effect_evidence_level": "configuration_only"
+      },
+      "validation": {
+        "configuration_checked": true,
+        "ordinary_prerequisite_code_checked": true,
+        "controlled_live": "not_run",
+        "ui_observation_used_for_effect_validation": false,
+        "ui_tree_presence_observed": true
+      }
+    }
+  ],
+  "blessing_selection_gate": {
+    "threshold_array": [
+      6,
+      9,
+      12,
+      15,
+      9999
+    ],
+    "counter": "TechComponent.unlockedTechCount",
+    "selection_zh": "按当前已取得祝福数选择下一门槛，且getVictoryTechReq会检查Lore/LoreSword胜利启用状态。不要把四个祝福分别固定配给6/9/12/15。",
+    "final_blessing_additional_minimum_count": 9,
+    "final_blessing_note_zh": "canUnlockTech另要求FinalBlessing至少达到门槛数组第1项9；这是已核局部资格，不代表完整胜利条件。",
+    "ordinary_lore_purchase_cost": null,
+    "payment_zh": "祝福走独立资格/授予分支，不能当普通树节点继续花一次普通知识价。免费/偷取/脚本获得对计数的边界仍需保留。",
+    "configuration_refs": [
+      "techTree.Vikings.victory"
+    ],
+    "function_ids": [
+      13065,
+      13072,
+      13086,
+      13095,
+      13096,
+      54950
+    ],
+    "selected_op_refs": {
+      "54950": "42570-42598",
+      "13086": "235-261"
+    },
+    "controlled_live": "not_run"
+  },
+  "blessings": [
+    {
+      "id": "FreyaBlessing",
+      "name_zh": "菲娅的祝福",
+      "internal_name_note_zh": "当前本地中文名；不同社区也译作芙蕾雅。",
+      "effect_summary_zh": "食物生产冬罚幅度减少50%；额外木耗冬罚幅度减少15%。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 0.5
+        },
+        {
+          "value_id": 3,
+          "configured_value": 0.85
+        }
+      ],
+      "limits_zh": "不是总食耗减半或总木耗直接乘0.85；GreaterBlessings等特殊增强不纳入普通组合。",
+      "sources": {
+        "configuration_refs": [
+          "tech.FreyaBlessing.values"
+        ],
+        "function_ids": [
+          4296,
+          38421
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "blessing",
+      "unlock_model_ref": "blessing_selection_gate",
+      "ordinary_dag_node": false,
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "ThorBlessing",
+      "name_zh": "巴德尔的祝福",
+      "internal_name_note_zh": "显示名称Baldr，内部ID保留Thor。",
+      "effect_summary_zh": "增加3幸福。",
+      "configuration_parameters": [
+        {
+          "value_id": 1,
+          "configured_value": 3
+        }
+      ],
+      "limits_zh": "幸福项不是可花费库存，出生仍需增长、住房和其他门控。",
+      "sources": {
+        "configuration_refs": [
+          "tech.ThorBlessing.values[id=1]"
+        ],
+        "function_ids": [
+          13090
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "blessing",
+      "unlock_model_ref": "blessing_selection_gate",
+      "ordinary_dag_node": false,
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "LokiBlessing",
+      "name_zh": "佐徳的祝福",
+      "internal_name_note_zh": "显示名称Jörd，内部ID保留Loki。",
+      "effect_summary_zh": "一次获得15石、10铁。",
+      "configuration_parameters": [
+        {
+          "value_id": 0,
+          "configured_value": 15
+        },
+        {
+          "value_id": 3,
+          "configured_value": 10
+        }
+      ],
+      "limits_zh": "这是领取时的资源变化，不能计入矿工持续生产率。",
+      "sources": {
+        "configuration_refs": [
+          "tech.LokiBlessing.values"
+        ],
+        "function_ids": [
+          13096
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "blessing",
+      "unlock_model_ref": "blessing_selection_gate",
+      "ordinary_dag_node": false,
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "FinalBlessing",
+      "name_zh": "传承知识",
+      "internal_name_note_zh": "英文Ancestral Knowledge。",
+      "effect_summary_zh": "智慧胜利所需的祝福/知识条件。",
+      "configuration_parameters": [],
+      "limits_zh": "不提供“免费若干普通知识”的依据；完整胜利状态机未在本目录闭合，不能仅凭取得它宣布获胜。",
+      "sources": {
+        "configuration_refs": [
+          "tech.FinalBlessing.desc",
+          "techTree.Vikings.victory"
+        ],
+        "function_ids": [
+          13072,
+          13086,
+          13096
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "blessing",
+      "unlock_model_ref": "blessing_selection_gate",
+      "ordinary_dag_node": false,
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    }
+  ],
+  "fame_rewards": [
+    {
+      "id": "KindredSpirit",
+      "name_zh": "志趣相投",
+      "fame_threshold": 200,
+      "effect_summary_zh": "符合熊/英雄同区击杀分支时给予3声望；合格地方生产加项0.15。",
+      "configuration_parameters": [
+        {
+          "value_id": 8,
+          "configured_value": 3
+        },
+        {
+          "value_id": 0,
+          "configured_value": 1.15
+        }
+      ],
+      "limits_zh": "本人工人的盾兵营来源与同地块同队熊/英雄来源替代，不叠成30%/45%；英雄来源可涉及同队工人，不是全体永久+15%。击杀归因需保留。",
+      "sources": {
+        "configuration_refs": [
+          "clan.Bear.fame[tech=KindredSpirit]",
+          "tech.KindredSpirit.values[id=8,0]"
+        ],
+        "function_ids": [
+          4295,
+          5062
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "fame_reward",
+      "ordinary_dag_node": false,
+      "player_picks_as_ordinary_knowledge": false,
+      "acquisition_zh": "普通熊族声望奖励通道；必须另证已达到门槛且奖励有效，不把tech存储出现等同手点知识。",
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    },
+    {
+      "id": "BearAwake",
+      "name_zh": "熊之觉醒",
+      "fame_threshold": 500,
+      "effect_summary_zh": "军事攻击修正包含Fame/100×0.015；允许Kaija进入敌方领土。",
+      "configuration_parameters": [
+        {
+          "value_id": 7,
+          "configured_value": 0.015
+        },
+        {
+          "value_id": 9,
+          "configured_value": 100
+        }
+      ],
+      "limits_zh": "已核攻击分支没有按每满100先floor；500时该项0.075不是最终DPS保证。500前普通军队/英雄不因Kaija门控而都无法进攻。",
+      "sources": {
+        "configuration_refs": [
+          "clan.Bear.fame[tech=BearAwake]",
+          "tech.BearAwake.values"
+        ],
+        "function_ids": [
+          33902,
+          15131
+        ],
+        "evidence_level": "selected_code_branches",
+        "controlled_live": "not_run"
+      },
+      "kind": "fame_reward",
+      "ordinary_dag_node": false,
+      "player_picks_as_ordinary_knowledge": false,
+      "acquisition_zh": "普通熊族声望奖励通道；必须另证已达到门槛且奖励有效，不把tech存储出现等同手点知识。",
+      "validation": {
+        "configuration_checked": true,
+        "controlled_live": "not_run"
+      }
+    }
+  ],
+  "route_hypotheses": [
+    {
+      "id": "single_self_sufficient",
+      "evidence_level": "conditional_strategy_hypothesis",
+      "mode_context": "singleplayer",
+      "team_duties_zh": "需要自行清关键地、侦察、维持经济和形成军力。",
+      "map_conditions_zh": [
+        "关键粮/知识地是否被野怪阻挡",
+        "鱼地可用性与距离",
+        "当前知识产出入口和首冬前剩余游戏时间"
+      ],
+      "candidate_knowledge_paths": [
+        [
+          "Lumber",
+          "Colonize",
+          "Hibernate",
+          "Harpoons"
+        ],
+        [
+          "Lumber",
+          "BetterSilo",
+          "Recruit",
+          "Harpoons"
+        ]
+      ],
+      "purpose_zh": "比较扩张/人口/冬季恢复与实际鱼岗收益；两条只是满足普通前置的候选，不要求全选或固定先后。",
+      "invalidation_conditions_zh": [
+        "没有实际鱼岗时，鱼叉不能凭名字提供收益",
+        "急迫军事压力可能要求提前转军事根节点",
+        "额外科技、免费科技或事件改变计价和时间"
+      ],
+      "needed_observations_zh": [
+        "每点知识的真实报价与支付",
+        "鱼岗实际人数/生产资格",
+        "熊的路线/伤势/恢复时间",
+        "殖民完成到知识/粮岗投产的时间"
+      ],
+      "unmodified_budget_example": {
+        "paid_nodes": 4,
+        "sum_lore": 470,
+        "not_a_runtime_quote": true
+      }
+    },
+    {
+      "id": "coasts_and_early_army",
+      "evidence_level": "conditional_strategy_hypothesis",
+      "mode_context": "singleplayer_or_declared_team_army_role",
+      "team_duties_zh": "若团队局，事先约定接战时点、清野和敌境视野职责。",
+      "map_conditions_zh": [
+        "有可用海岸和实际有效水手",
+        "知识能够及时取得",
+        "英雄、侦察升级、军费和补给前置可兑现"
+      ],
+      "candidate_knowledge_paths": [
+        [
+          "WinterFestival",
+          "Drakkars",
+          "Weaponsmith",
+          "LandProtect",
+          "ShieldMaster",
+          "Heroes"
+        ]
+      ],
+      "purpose_zh": "较浅财富路径接军线；冬节/造船的收益要按季节和实际水手工作计算。",
+      "invalidation_conditions_zh": [
+        "缺海岸、提前受压、知识滞后",
+        "盾兵资源费免费但锻造没有完成",
+        "军队已动员但队友/视野/通路没有准备好"
+      ],
+      "needed_observations_zh": [
+        "港口任务和有效工作窗口",
+        "季节、知识到达及军费断点",
+        "Forge项目开始/完成",
+        "整队到场时间与战损后经济"
+      ],
+      "unmodified_budget_example": {
+        "paid_nodes": 6,
+        "sum_lore": 940,
+        "not_a_runtime_quote": true
+      }
+    },
+    {
+      "id": "three_v_three_with_main_clear",
+      "evidence_level": "conditional_strategy_hypothesis",
+      "mode_context": "3v3",
+      "team_duties_zh": "已声明有主清野；熊可能协助承伤/补清并准备正面军力，不能由氏族自动推定该职责。",
+      "map_conditions_zh": [
+        "队友关键地需求、鱼地恢复距离与通路",
+        "本方经济工人区域集中程度",
+        "共同接战窗口与敌方压力"
+      ],
+      "candidate_knowledge_paths": [
+        [
+          "Weaponsmith",
+          "LandProtect",
+          "ShieldMaster",
+          "Heroes"
+        ],
+        [
+          "Lumber",
+          "Colonize",
+          "Recruit",
+          "Harpoons"
+        ]
+      ],
+      "purpose_zh": "按实际队伍计划比较军事准备、关键地协助和经济深投；200声望后还可比较盾营留地方增益与英雄外出的作用。",
+      "invalidation_conditions_zh": [
+        "队友无人承担关键清野/侦察时不能沿用原分工",
+        "鱼岗未形成或队伍提前转军",
+        "把自己库存改善误认成整队收益"
+      ],
+      "needed_observations_zh": [
+        "参与者自愿提供的带时间职责/行动说明",
+        "本方局部工人与军营分布",
+        "自己单位伤势、路径、到场时点",
+        "缺队友证据时将团队收益保持未知"
+      ],
+      "unmodified_budget_example": null
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "ui_base_winter_wording",
+      "status": "unresolved_ui_vs_code_semantics",
+      "question_zh": "用户当前部落详情中文称初始“食物/柴消耗减30%”，与已核Food生产冬罚路径口径不符；需以实际毛产/消费分别对账，不能擅自抹平。"
+    },
+    {
+      "id": "remaining_effect_branches",
+      "status": "partial_code_coverage",
+      "question_zh": "标configuration_only的卡片尚无完整效果调用链；已核分支也未覆盖所有资格和组合。"
+    },
+    {
+      "id": "dynamic_knowledge_quotes",
+      "status": "not_controlled_live_validated",
+      "question_zh": "不同模式/免费获得/类别计数下实际报价、扣费及祝福可选项尚需实局证据。"
+    },
+    {
+      "id": "complete_wisdom_victory",
+      "status": "not_closed",
+      "question_zh": "FinalBlessing、全部祝福、普通知识计数和胜利启用的完整状态机未闭合，不从一处局部条件宣布胜利。"
+    },
+    {
+      "id": "route_value",
+      "status": "hypotheses_only",
+      "question_zh": "每条路线仍需地图、有效人口劳动、准备/接战时点与队伍职责验证；没有唯一最优顺序结论。"
+    }
+  ],
+  "starting_traits": [
+    {
+      "id": "bear.start.winter",
+      "name_zh": "冬季经济特性",
+      "ui_and_code_summary_zh": "游戏中文写冬季食物和柴火消耗降低30%。当前已核代码：Food生产冬罚幅度和额外取暖冬耗幅度各乘0.7，不能直接写总食耗×0.7。",
+      "limits_zh": "与手点冬节分开；界面原文已见，生产与消费的实局对照尚未完成。",
+      "source_summary": "clan.Bear.CWinterMalusReduce=0.7；#4296、#38421",
+      "user_supplied_ui_wording_observed": true,
+      "controlled_live_validation": "not_run"
+    },
+    {
+      "id": "bear.start.kaija",
+      "name_zh": "Kaija装甲熊",
+      "ui_and_code_summary_zh": "可在训练营召唤装甲熊。已核合格鱼地分支：0.2粮／游戏秒（固定60秒等价12粮），恢复基础0.375生命／游戏秒。",
+      "limits_zh": "须同地块非海洋Shoal、非交战及通用能力门控；恢复另有修正。这不是所有海岸都生效，也不是逐人实产观察。",
+      "source_summary": "BearHunting；#13741、#16066、#4118",
+      "user_supplied_ui_wording_observed": true,
+      "controlled_live_validation": "not_run"
+    },
+    {
+      "id": "bear.start.army",
+      "name_zh": "冬季军事特性",
+      "ui_and_code_summary_zh": "冬季熊族军队跳过已核普通攻击冬罚，并增加0.1防御修正；与截图“力量不降低，获得10%防御”相容。",
+      "limits_zh": "10%是防御修正，不是固定减伤10%或直接加10防御点；其他战斗修正仍需合并。",
+      "source_summary": "CMilitaryWinter=1.1；#33901 op199–239、#33910 op475–498",
+      "user_supplied_ui_wording_observed": true,
+      "controlled_live_validation": "not_run"
+    }
+  ],
+  "ui_cross_checks": {
+    "source": "user_supplied_screenshots_in_current_conversation",
+    "review_date": "2026-10-27",
+    "ordinary_tree_names_and_layout_observed": true,
+    "ordinary_effect_tooltips_observed": [
+      "Lumber"
+    ],
+    "starting_reward_wording_observed": true,
+    "fame_threshold_names_observed": [
+      200,
+      500
+    ],
+    "does_not_establish": "all node effect tooltips, current learned state, costs paid, or effective runtime modifiers"
+  }
+}

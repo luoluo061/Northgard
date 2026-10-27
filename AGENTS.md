@@ -8,6 +8,8 @@ Before gameplay interpretation, read `docs/STRATEGY_ROLES_AND_GUIDES.zh-CN.md`. 
 
 Use `docs/CLAN_STRATEGY_CASES.zh-CN.md` for the audited Bear/Raven/Lynx case boundaries. In particular, a non-null Sailor label need not mean Money income, local Bear production sources do not stack, and passive-lure deer cannot be assumed to enter the inspected animal-kill feast-discount path. These are selected offline branches and conditional calculations, not full-match validation or automatic advice.
 
+Use `docs/MECHANICS_REFERENCE.zh-CN.md` to navigate population formulas, selected job channels, economic capability conversions and the Bear lore DAG. `mechanics/catalog/*.json` are reviewed reference cards, not complete runtime decoders. Preserve quantity semantics: continuous base channels, Happiness contributions, mining progress inputs, displayed Sailors labels and task-only work are different. A base cost vector is not a final quote, paid transaction or completed ability. Public reference cards never upgrade unknown per-unit actual output to a measured rate; control experiments retain their individual validation status.
+
 ## Install and record within the user's request
 
 - Windows x64, 64-bit Python 3.11+, standard library only. Use an existing interpreter. No administrator rights, execution-policy changes, injected DLLs, native game getter calls, process writes, game edits, or automatic game input.

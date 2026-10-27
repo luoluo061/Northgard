@@ -15,7 +15,7 @@ MONTH_GAME_SECONDS = 60
 BASE_GATHERER_FOOD_PER_GAME_SECOND = 0.4
 SUPPORTED_CLANS = ('Bear', 'Raven')
 SUPPORTED_CONTEXT = 'ordinary_human_singleplayer_homogeneous_baseline'
-BUILD = {'steam_build': '25096976', 'game_version': 'v4.3.29.43387',
+BUILD = {'steam_build': '25096976', 'game_version': 'v4.3.29.43337',
     'hlboot_sha256': 'db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76',
     'data_cdb_sha256': '88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3'}
 

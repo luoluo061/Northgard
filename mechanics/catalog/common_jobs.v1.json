@@ -1,0 +1,323 @@
+{
+  "schema_version": 1,
+  "catalog_kind": "reviewed_job_channels",
+  "review_date": "2026-10-27",
+  "build": {
+    "steam_build": "25096976",
+    "game_version": "v4.3.29.43337",
+    "hlboot_sha256": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76",
+    "data_cdb_sha256": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+  },
+  "not_a_runtime_decoder": true,
+  "preconditions": [
+    "连续渠道的60秒等价值要求该基础渠道持续有效、无加减成。",
+    "需要另算季节、伤病、幸福、工具、地块、氏族、模式及工作资格。",
+    "库存还受全局消费、维护、一次性支付与容量限制。"
+  ],
+  "cards": [
+    {
+      "id": "villager_food",
+      "name_zh": "村民采食",
+      "unit_kind": "Villager",
+      "resource_channel": "Food",
+      "building_alternatives": [],
+      "configured_q": 0.4,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.4,
+      "fixed_60_game_second_base_equivalent": 24.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "需要有效采食任务；施工、移动、战斗等阶段不能只凭职业计满产。",
+      "source_ref": "data.cdb/unit/Villager/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "woodcutter_wood",
+      "name_zh": "伐木工",
+      "unit_kind": "Woodcutter",
+      "resource_channel": "Wood",
+      "building_alternatives": [
+        "WoodLodge"
+      ],
+      "configured_q": 0.4,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.4,
+      "fixed_60_game_second_base_equivalent": 24.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "普通维京伐木场渠道；排除猫头鹰及特殊模式替代渠道。",
+      "source_ref": "data.cdb/unit/Woodcutter/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "farmer_wheat",
+      "name_zh": "农民",
+      "unit_kind": "Farmer",
+      "resource_channel": "Wheat",
+      "building_alternatives": [
+        "Fields"
+      ],
+      "configured_q": 0.5,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.5,
+      "fixed_60_game_second_base_equivalent": 30.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "非冬季配置基值；已核冬季小麦基础会替换为村民基础，再走冬罚。",
+      "source_ref": "data.cdb/unit/Farmer/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "hunter_meat",
+      "name_zh": "猎人",
+      "unit_kind": "Hunter",
+      "resource_channel": "Meat",
+      "building_alternatives": [
+        "HunterLodge"
+      ],
+      "configured_q": 0.475,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.475,
+      "fixed_60_game_second_base_equivalent": 28.5,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "本卡是自然猎场渠道；诱饵、猎物存在、资格与冬季规则另核。",
+      "source_ref": "data.cdb/unit/Hunter/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "fisherman_freshwater",
+      "name_zh": "渔民（渔屋）",
+      "unit_kind": "Fisherman",
+      "resource_channel": "Fish",
+      "building_alternatives": [
+        "FishermanHouse"
+      ],
+      "configured_q": 0.435,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.435,
+      "fixed_60_game_second_base_equivalent": 26.1,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "需要对应鱼地与建筑；不把同一职业的Fishery渠道叠加。",
+      "source_ref": "data.cdb/unit/Fisherman/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "merchant_money",
+      "name_zh": "商人",
+      "unit_kind": "Merchant",
+      "resource_channel": "Money",
+      "building_alternatives": [
+        "TradingPost",
+        "MarketPlace"
+      ],
+      "configured_q": 0.2,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.2,
+      "fixed_60_game_second_base_equivalent": 12.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "建筑为可选渠道，不是两栋建筑就让同一人重复产出。贸易路线和出售资源是另一笔账。",
+      "source_ref": "data.cdb/unit/Merchant/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "sailor_port_money",
+      "name_zh": "水手（普通港口金币）",
+      "unit_kind": "Sailor",
+      "resource_channel": "Money",
+      "building_alternatives": [
+        "Port"
+      ],
+      "configured_q": 0.2,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.2,
+      "fixed_60_game_second_base_equivalent": 12.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "Sailors展示标签不能与Money再相加；Lore/Fame由港口当前选择和实际分支决定。",
+      "source_ref": "data.cdb/unit/Sailor/produce[2]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "sailor_raven_money",
+      "name_zh": "水手（乌鸦港口金币）",
+      "unit_kind": "Sailor",
+      "resource_channel": "Money",
+      "building_alternatives": [
+        "RavenPort"
+      ],
+      "configured_q": 0.25,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.25,
+      "fixed_60_game_second_base_equivalent": 15.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "乌鸦港口0.25；已核占领等工作分支可能替代金币，即使职业仍为Sailor。",
+      "source_ref": "data.cdb/unit/Sailor/produce[3]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "rune_master_lore",
+      "name_zh": "符文师",
+      "unit_kind": "RuneMaster",
+      "resource_channel": "Lore",
+      "building_alternatives": [
+        "RuneStone",
+        "CarvedStone",
+        "CircleStone",
+        "AncientGraveyard",
+        "FountainFame",
+        "BigSword"
+      ],
+      "configured_q": 0.3,
+      "quantity_semantics": "continuous_resource_base",
+      "base_per_game_second": 0.3,
+      "fixed_60_game_second_base_equivalent": 18.0,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "以上是可选资源点渠道；需要实际容量、指派、可生产资格和修正。",
+      "source_ref": "data.cdb/unit/RuneMaster/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "miner_stone_input",
+      "name_zh": "矿工（石）",
+      "unit_kind": "Miner",
+      "resource_channel": "Stone",
+      "building_alternatives": [
+        "Mine"
+      ],
+      "configured_q": 0.032,
+      "quantity_semantics": "discrete_deposit_progress_input",
+      "base_per_game_second": null,
+      "fixed_60_game_second_base_equivalent": null,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "q输入矿藏/共享开采进度；跨阈值才离散到账。不能直接当每秒库存收入。",
+      "source_ref": "data.cdb/unit/Miner/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "miner_iron_input",
+      "name_zh": "矿工（铁）",
+      "unit_kind": "Miner",
+      "resource_channel": "Iron",
+      "building_alternatives": [
+        "Mine"
+      ],
+      "configured_q": 0.032,
+      "quantity_semantics": "discrete_deposit_progress_input",
+      "base_per_game_second": null,
+      "fixed_60_game_second_base_equivalent": null,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "必须有对应矿藏且尚未耗尽；不能用配置q乘60承诺本月到手铁数。",
+      "source_ref": "data.cdb/unit/Miner/produce[2]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "innkeeper_happiness",
+      "name_zh": "酿酒师",
+      "unit_kind": "InnKeeper",
+      "resource_channel": "Happy",
+      "building_alternatives": [
+        "Tavern"
+      ],
+      "configured_q": 3,
+      "quantity_semantics": "happiness_contribution_base",
+      "base_per_game_second": null,
+      "fixed_60_game_second_base_equivalent": null,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "幸福是人口系统的状态贡献，不是每秒可积攒3幸福；完整全局幸福与增长修正另核。",
+      "source_ref": "data.cdb/unit/InnKeeper/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    },
+    {
+      "id": "healer_healing_input",
+      "name_zh": "治疗师",
+      "unit_kind": "Healer",
+      "resource_channel": "Healing",
+      "building_alternatives": [
+        "HealerHut"
+      ],
+      "configured_q": 0.429,
+      "quantity_semantics": "healing_branch_input",
+      "base_per_game_second": null,
+      "fixed_60_game_second_base_equivalent": null,
+      "is_observed_monthly_income": false,
+      "native_actual_rate": null,
+      "native_settled_amount": null,
+      "effective_modifiers": null,
+      "scope": "selected_ordinary_viking_channel_only",
+      "boundary_zh": "治疗目标、分配、伤病和治疗/采食切换决定实际效果；本表不宣称0.429为已测回血率。",
+      "source_ref": "data.cdb/unit/Healer/produce[0]",
+      "evidence_level": "verified_config_not_controlled_live_validated"
+    }
+  ],
+  "task_only_roles": [
+    {
+      "id": "construction",
+      "unit_kind": "Villager",
+      "configured_q": null,
+      "boundary_zh": "施工是任务，不应寻找不存在的普通Builder职业行；施工率、多人叠加与移动等待尚未在此闭合。"
+    },
+    {
+      "id": "scouting",
+      "unit_kind": "Scout",
+      "configured_q": null,
+      "boundary_zh": "普通侦察主要形成已知地图与信息；配置Wood=0等条目不能解释为侦察无收益，也不能推出Raven侦察的动态Lore。"
+    },
+    {
+      "id": "forging",
+      "configured_q": null,
+      "boundary_zh": "锻造推进项目和未来能力，不能把进度直接换成库存；项目报价、锻造时间与完成效果要另记。"
+    }
+  ],
+  "unknowns": [
+    "完整逐人修正合并",
+    "生产资格的全部分支",
+    "逐人实际到账",
+    "所有氏族和特殊模式变体",
+    "完整施工/转职/锻造时间",
+    "完整矿藏结算模型"
+  ]
+}
