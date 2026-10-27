@@ -27,6 +27,7 @@ SOURCE_FILES = (
     'docs/MECHANICS_FRAMEWORK.zh-CN.md',
     'docs/MECHANICS_RESEARCH_PROGRAM.zh-CN.md',
     'docs/STRATEGY_ROLES_AND_GUIDES.zh-CN.md',
+    'docs/CLAN_STRATEGY_CASES.zh-CN.md',
     'docs/MECHANICS_EVIDENCE.md',
     'docs/MECHANICS_VALIDATION_PLAN.md',
     'tests/test_atomic_publication.py',

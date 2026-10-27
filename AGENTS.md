@@ -6,6 +6,8 @@ Mechanism research now follows `docs/MECHANICS_RESEARCH_PROGRAM.zh-CN.md`, `docs
 
 Before gameplay interpretation, read `docs/STRATEGY_ROLES_AND_GUIDES.zh-CN.md`. Establish mode, clan, declared team duties, map opportunities and combat timing before evaluating worker allocation. Clearing, scouting, feasting/meals and army conversion can create team benefits absent from the local stock curve. Roles overlap and vary by match; never infer a player's assigned role from clan alone. Distinguish historical guides, current rule evidence and community opinions. Video descriptions and chapters do not establish that the full video was watched. Missing team context remains unknown; this does not expand capture scope.
 
+Use `docs/CLAN_STRATEGY_CASES.zh-CN.md` for the audited Bear/Raven/Lynx case boundaries. In particular, a non-null Sailor label need not mean Money income, local Bear production sources do not stack, and passive-lure deer cannot be assumed to enter the inspected animal-kill feast-discount path. These are selected offline branches and conditional calculations, not full-match validation or automatic advice.
+
 ## Install and record within the user's request
 
 - Windows x64, 64-bit Python 3.11+, standard library only. Use an existing interpreter. No administrator rights, execution-policy changes, injected DLLs, native game getter calls, process writes, game edits, or automatic game input.
