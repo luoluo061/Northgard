@@ -32,6 +32,8 @@ Use `docs/MECHANICS_REFERENCE.zh-CN.md` to navigate population formulas, selecte
 
 ## Preserve data meaning
 
+The requested map-content expansion includes player-known neutral creatures, spawn sources, exploration sites, fame/special opportunities and neutral factions. See `docs/PROJECT_ROADMAP.zh-CN.md` and `docs/MAP_OBJECT_CAPTURE_SPEC.zh-CN.md`. This is a target scope with per-type adapters and validation, not a blanket expansion of the current runtime whitelist. `inspect_map_catalog.py` reads local static definitions only; catalogue membership, group labels and reward candidates never prove runtime visibility, eligibility or settlement. In particular, Unit.owner and Unit.neutralOwner have different roles; Ruins.state null can be a lifecycle result; fameState needs contextual interpretation.
+
 - Simulation time is authoritative: zero is A800 March, 60 game seconds/month, 720/year. Month thirds are report buckets. Pauses add no labor, production or growth time. Preserve session/run/segment boundaries, read errors and sampling intervals.
 - Own-unit UID/kind chains and profession/warband composition can be captured across clans. Housing-population semantics are currently verified only for ordinary Bear/Raven paths. Never claim all clans' populations or economics are fully modeled or replace unknown population with unit count.
 - Housing population, entity count, assigned workers, production candidates, configured rates, model estimates and aggregate native flows are different quantities.

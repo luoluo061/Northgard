@@ -20,6 +20,10 @@ import zipfile
 VERSION = "0.5.2"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'docs/PROJECT_ROADMAP.zh-CN.md',
+    'docs/MAP_OBJECT_CAPTURE_SPEC.zh-CN.md',
+    'scripts/inspect_map_catalog.py',
+    'tests/test_map_catalog.py',
     'docs/OPERATIONS_ADVISOR_DESIGN.zh-CN.md',
     'docs/KNOWN_ZONE_DETAILS.zh-CN.md',
     'companion/core/known_zone_details.py',
