@@ -39,6 +39,31 @@ def check(row):
 
 
 class KnownZoneSubmissionTests(unittest.TestCase):
+    def test_native_null_context_roundtrip_and_missing_or_conflicting_proofs(self):
+        row=observation()
+        row['game_context'].pop('game_type_kind')
+        row['game_context']['game_type_state']='native_null'
+        source=shared(row);check(source)
+        missing=copy.deepcopy(source);missing['game_context'].pop('game_type_state')
+        with self.assertRaises(SubmissionError):check(missing)
+        conflict=copy.deepcopy(source);conflict['game_context']['game_type_kind']='Standard'
+        with self.assertRaises(SubmissionError):check(conflict)
+        multiplayer=copy.deepcopy(source);multiplayer['game_context'].update(
+            mode_kind='Multiplayer',mode_variant_kind='Team3V3')
+        with self.assertRaises(SubmissionError):check(multiplayer)
+        harness=self.harness()
+        rows=[observation(100.),observation(101.)]
+        for value in rows:
+            value['game_context'].pop('game_type_kind')
+            value['game_context']['game_type_state']='native_null'
+        harness.write_rows('player-observations.ndjson',rows)
+        directory,archive=harness.export()
+        validate_submission(directory);validate_submission(archive)
+        exported=[loads(line) for line in gzip.decompress(
+            (directory/'player-observations.ndjson.gz').read_bytes()).splitlines()]
+        self.assertTrue(all(value['game_context']['game_type_state']=='native_null' for value in exported))
+        self.assertTrue(all('game_type_kind' not in value['game_context'] for value in exported))
+
     def harness(self):
         harness=pipeline.SubmissionPipelineTests();harness.setUp()
         self.addCleanup(harness.tearDown)

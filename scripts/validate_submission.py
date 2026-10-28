@@ -229,8 +229,12 @@ def validate_known_zone_component(component,row):
             and all(component[key]==row.get(key) for key in
                     ('local_player_entity_uid','session_key','capture_run_id','capture_segment_id')))
     context=row.get('game_context',{})
+    game_type_state=context.get('game_type_state')
+    supported_game_type=(
+        game_type_state=='native_null' and 'game_type_kind' not in context
+        or context.get('game_type_kind')=='Standard' and game_type_state in (None,'enum'))
     require(context.get('mode_kind')=='Singleplayer' and context.get('mode_variant_kind')=='FreeForAll'
-            and context.get('game_type_kind')=='Standard'
+            and supported_game_type
             and context.get('editor_present') is False and context.get('bifrost_data_present') is False)
     import math
     require(component['time_after']>=component['time_before']

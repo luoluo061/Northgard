@@ -1531,6 +1531,12 @@
           "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
           "type": "string"
         },
+        "game_type_state": {
+          "enum": [
+            "native_null",
+            "enum"
+          ]
+        },
         "mode_kind": {
           "maxLength": 128,
           "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",

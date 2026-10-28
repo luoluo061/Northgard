@@ -18,6 +18,18 @@ KINDS_ZH = {'Stones': '石矿', 'IronDeposit': '铁矿', 'Fertility': '农田',
 STATES_ZH = {'ok': '支持范围内已读', 'partial': '部分可读', 'unavailable': '读取不可用',
              'unsupported_context': '本场景尚未支持', 'rejected': '校验未通过',
              'missing': '此帧没有该组件'}
+REASONS_ZH = {
+    'known_zone_shoal_enablement_unsupported': '鱼源的海鱼或启用状态尚未确认',
+    'known_zone_grass_visibility_unsupported': '草丛隐藏规则暂未覆盖',
+    'known_zone_resource_state_missing': '矿量或开采进度字段未读到',
+    'known_zone_natural_attributes_unavailable': '自然属性分类不完整',
+    'known_zone_resource_read_failed': '资源读取失败',
+    'known_zone_wildlife_read_failed': '野兽读取失败',
+    'known_zone_resource_type_unsupported': '资源对象类型尚未支持',
+    'known_zone_wildlife_type_unsupported': '野兽对象类型尚未支持',
+    'known_zone_visibility_unsupported': '对象显隐状态未覆盖或不可显示',
+    'known_zone_wildlife_visibility_unsupported': '野兽显隐或特殊状态未覆盖',
+}
 IDENTITIES = ('session_key', 'capture_run_id', 'capture_segment_id')
 
 
@@ -99,6 +111,12 @@ def format_report(report):
     for zone in report['zones']:
         lines.append(f"\n地块 {zone['zone_id']}：资源{STATES_ZH.get(zone['resources_status'], zone['resources_status'])}；"
                      f"野兽{STATES_ZH.get(zone['wildlife_status'], zone['wildlife_status'])}")
+        for field, label in (('resource_reason_codes', '资源原因'),
+                             ('wildlife_reason_codes', '野兽原因')):
+            for code in zone.get(field, []):
+                description = REASONS_ZH.get(code)
+                lines.append(f"  {label}：{description}（{code}）" if description
+                             else f"  {label}：{code}")
         for resource in zone['resources']:
             kind = resource['kind']
             text = f"  {KINDS_ZH[kind]} × {resource['object_count']}"

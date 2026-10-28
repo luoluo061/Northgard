@@ -166,6 +166,54 @@ class CaptureTests(unittest.TestCase):
             else: h.fields['state', 'editor' if change == 'editor' else 'bifrostData'] = 999
             self.assertEqual(capture(h)['status'], 'unsupported_context')
 
+    def test_recorded_singleplayer_native_null_game_type_is_supported(self):
+        # Independent of the old Standard-only fixture: the pinned native
+        # GameState constructors store a null pointer, as in the human match.
+        h = Heap(); h.fields['state', 'gameType'] = 0
+        context = {**CONTEXT, 'game_type': None}
+        row = capture(h, game_context=context)
+        self.assertEqual(row['status'], 'partial')
+        self.assertEqual(row['zones'][0]['resources'][0]['remaining_total_raw'], 30.)
+        self.assertEqual(row['zones'][0]['wildlife_status'], 'ok')
+        self.assertIsNone(context['game_type'])
+        self.assertNotIn(('game_type', 'kind'), h.reads)
+
+    def test_native_null_requires_explicit_matching_source_context(self):
+        for supplied in (dict(CONTEXT), {k: v for k, v in CONTEXT.items() if k != 'game_type'}):
+            h = Heap(); h.fields['state', 'gameType'] = 0
+            row = capture(h, game_context=supplied)
+            self.assertEqual(row['status'], 'unsupported_context')
+            self.assertEqual(row['zones'], [])
+            self.assertFalse(any(name in ('buildings', 'units') for _, name in h.reads))
+        # A null caller label cannot override a non-null native Standard enum.
+        self.assertEqual(capture(game_context={**CONTEXT, 'game_type': None})['status'],
+                         'unsupported_context')
+
+    def test_null_game_type_never_enables_other_modes_or_damaged_enum(self):
+        for native_mode in ('Multiplayer', 'Conquest', 'Bifrost'):
+            h = Heap(); h.fields['state', 'gameType'] = 0
+            if native_mode == 'Multiplayer':
+                h.enums['mode'] = ('Multiplayer', [(923, 'variant')])
+            else:
+                h.enums['mode'] = (native_mode, [(13, 'ignored')] * (2 if native_mode == 'Conquest' else 1))
+            self.assertEqual(capture(h, game_context={**CONTEXT, 'game_type': None})['status'],
+                             'unsupported_context')
+        for pointer in (None, False, 0.0, 'damaged_enum'):
+            h = Heap(); h.fields['state', 'gameType'] = pointer
+            h.types['damaged_enum'] = 'ent.Unit'
+            with self.subTest(pointer=pointer), self.assertRaises(module.LayoutError):
+                capture(h, game_context={**CONTEXT, 'game_type': None})
+
+    def test_game_type_null_to_enum_and_enum_to_null_races_are_rejected(self):
+        h = Heap(); h.fields['state', 'gameType'] = 0
+        h.changes['field', 'state', 'gameType'] = lambda n, old: 'game_type' if n >= 3 else old
+        with self.assertRaises(module.LayoutError):
+            capture(h, game_context={**CONTEXT, 'game_type': None})
+        h = Heap()
+        h.changes['field', 'state', 'gameType'] = lambda n, old: 0 if n >= 4 else old
+        with self.assertRaises(module.LayoutError):
+            capture(h)
+
     def test_wrong_profile_identity_and_unknown_id_rejected(self):
         for args in ({'profile': {**PROFILE, 'data_cdb_sha256': 'different'}},
                      {'identity': {}}, {'known_zone_ids': [1, 3]}, {'known_zone_ids': [1, 1]},

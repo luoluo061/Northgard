@@ -115,9 +115,16 @@ def _supported_context(parent):
         return False
     if 'mode' in context:
         return (context['mode'] == {'kind': 'Singleplayer', 'args': [{'kind': 'FreeForAll', 'args': []}]}
-                and context.get('game_type') == {'kind': 'Standard', 'args': []})
+                and 'game_type' in context
+                and (context['game_type'] is None
+                     or context['game_type'] == {'kind': 'Standard', 'args': []}))
+    game_type_state = context.get('game_type_state')
+    supported_type = (
+        game_type_state == 'native_null' and 'game_type_kind' not in context
+        or context.get('game_type_kind') == 'Standard'
+           and game_type_state in (None, 'enum'))
     return (context.get('mode_kind') == 'Singleplayer' and context.get('mode_variant_kind') == 'FreeForAll'
-            and context.get('game_type_kind') == 'Standard')
+            and supported_type)
 
 
 def validate_known_zone_details(value, parent, *, projected=True):

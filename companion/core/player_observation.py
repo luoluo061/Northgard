@@ -497,6 +497,14 @@ def project_player_observation(snapshot: Any, *, include_own_events: bool = Fals
             value = context.get(source)
             if type(value) is dict and _token(value.get('kind')):
                 scoped_context[target] = value['kind']
+        # A stored null GameType is a real native state in ordinary singleplayer,
+        # distinct from a missing/unread field. Never relabel null as Standard.
+        if 'game_type' in context:
+            if context['game_type'] is None:
+                scoped_context['game_type_state'] = 'native_null'
+            elif (type(context['game_type']) is dict
+                    and _token(context['game_type'].get('kind'))):
+                scoped_context['game_type_state'] = 'enum'
         mode = context.get('mode')
         if type(mode) is dict and type(mode.get('args')) is list and len(mode['args']) == 1:
             variant = mode['args'][0]

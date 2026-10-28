@@ -290,6 +290,7 @@ RECORD_SCHEMAS['player-observations.ndjson.gz']['properties'].update({
     'base_neighborhood':BASE_NEIGHBORHOOD})
 RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['game_context']=obj({
     **{k:TOKEN for k in ('mode_kind','game_type_kind','mode_variant_kind','biome')},
+    'game_type_state':{'enum':['native_null','enum']},
     'bifrost_data_present':BOOL,'editor_present':BOOL,'difficulty':NUM})
 TEAM_LAYOUT = {'type':'string','pattern':r'^[1-9][0-9]?(?:v[1-9][0-9]?){0,63}$','maxLength':191}
 PLAY_MODES = ['Single','Multiplayer','Campaign','Conquest','Singleplayer','Bifrost']

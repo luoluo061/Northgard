@@ -17,7 +17,7 @@ import sys
 import zipfile
 
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
     'docs/OPERATIONS_ADVISOR_DESIGN.zh-CN.md',

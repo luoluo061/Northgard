@@ -19,6 +19,24 @@ def row(when, *, session='session', segment='segment'):
 
 
 class KnownZoneReportTests(unittest.TestCase):
+    def test_default_text_explains_zone_partial_reasons(self):
+        component, parent = fixture()
+        zone = component['zones'][1]
+        zone['resources_status'] = 'partial'
+        zone['resource_reason_codes'] = ['known_zone_shoal_enablement_unsupported']
+        for resource in zone['resources']:
+            resource['remaining_total_raw'] = resource['modeled_ui_remaining_total'] = None
+        zone['wildlife_status'] = 'partial'
+        zone['wildlife'] = [{'kind': 'Wolf', 'count': 2}]
+        zone['wildlife_reason_codes'] = ['known_zone_grass_visibility_unsupported']
+        parent['known_zone_details'] = component
+        value = report.build_report(project_player_observation(parent))
+        self.assertEqual(value['reason_codes'], [])
+        text = report.format_report(value)
+        self.assertIn('鱼源的海鱼或启用状态尚未确认', text)
+        self.assertIn('known_zone_shoal_enablement_unsupported', text)
+        self.assertIn('草丛隐藏规则暂未覆盖', text)
+
     def test_real_projection_to_report_preserves_mine_identity_and_meaning(self):
         component, parent = fixture()
         parent['known_zone_details'] = component

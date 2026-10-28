@@ -42,6 +42,39 @@ def fixture(when=100.):
 
 
 class KnownZoneProjectionTests(unittest.TestCase):
+    def test_explicit_native_null_game_type_is_not_missing_or_standard(self):
+        value, parent = fixture()
+        parent['game_context']['game_type'] = None
+        parent['known_zone_details'] = value
+        out = project_player_observation(parent)
+        self.assertEqual(out['known_zone_details']['status'], 'partial')
+        self.assertEqual(out['game_context']['game_type_state'], 'native_null')
+        self.assertNotIn('game_type_kind', out['game_context'])
+        validate_known_zone_details(out['known_zone_details'], out)
+
+    def test_missing_game_type_does_not_become_a_native_null_proof(self):
+        value, parent = fixture()
+        parent['game_context'].pop('game_type')
+        parent['known_zone_details'] = value
+        out = project_player_observation(parent)
+        self.assertEqual(out['known_zone_details']['status'], 'rejected')
+        self.assertNotIn('game_type_state', out['game_context'])
+
+    def test_standard_enum_context_retains_its_distinct_state(self):
+        value, parent = fixture()
+        parent['known_zone_details'] = value
+        out = project_player_observation(parent)
+        self.assertEqual(out['game_context']['game_type_state'], 'enum')
+        self.assertEqual(out['game_context']['game_type_kind'], 'Standard')
+
+    def test_projected_null_state_cannot_contradict_a_named_game_type(self):
+        value, parent = fixture()
+        parent['known_zone_details'] = value
+        out = project_player_observation(parent)
+        out['game_context']['game_type_state'] = 'native_null'
+        with self.assertRaises(ValueError):
+            validate_known_zone_details(out['known_zone_details'], out)
+
     def test_known_uncolonized_resource_and_creature_subset_is_preserved(self):
         value,parent=fixture();before=copy.deepcopy(value)
         out=project_known_zone_details(value,parent)

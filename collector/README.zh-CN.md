@@ -1,4 +1,4 @@
-# Northgard 本地采集器 0.5.1-alpha 准备版
+# Northgard 本地采集器 0.5.2-alpha 准备版
 
 面向单人验证和 **3v3 本人视角实验采集**。尚未完成真实 3v3 短测或完整局验收，不宣称联机稳定。先看[仓库 README](../README.md)、[Codex 安装流程](../docs/INSTALL_WITH_CODEX.md)和[3v3 说明](../docs/MULTIPLAYER_3V3.md)。
 

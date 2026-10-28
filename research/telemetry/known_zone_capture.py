@@ -341,16 +341,24 @@ def _wildlife(h, zone, game, state):
 
 def _context(h, me, state, supplied):
     mode = _mode(h, state)
-    game_type = _game_type(h, state)
+    # GameState's constructor #11185 and unserializeInit #7658 explicitly
+    # initialize gameType to null. initFromConfig #7544 copies config.type
+    # without a Standard default; ordinary recorded singleplayer matches can
+    # retain that native null. Distinguish a read null pointer from an invalid
+    # non-null enum, and never relabel native null as GameType.Standard.
+    game_type_pointer = h.field(state, 'gameType')
+    native_null = type(game_type_pointer) is int and game_type_pointer == 0
+    game_type = None if native_null else _game_type(h, state)
     editor, bifrost = h.field(state, 'editor'), h.field(state, 'bifrostData')
-    if (mode != ('Singleplayer', 'FreeForAll') or game_type != 'Standard'
+    if (mode != ('Singleplayer', 'FreeForAll') or game_type not in (None, 'Standard')
             or editor or bifrost):
         return False
     # Caller labels are a cross-check only; the native enums above determine
     # support. A fabricated Singleplayer label cannot enable multiplayer.
     if (type(supplied) is not dict
             or supplied.get('mode') != {'kind': 'Singleplayer', 'args': [{'kind': 'FreeForAll', 'args': []}]}
-            or supplied.get('game_type') != {'kind': 'Standard', 'args': []}
+            or 'game_type' not in supplied
+            or supplied['game_type'] != (None if native_null else {'kind': 'Standard', 'args': []})
             or supplied.get('editor_present') is not False
             or supplied.get('bifrost_data_present') is not False):
         return False

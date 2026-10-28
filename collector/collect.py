@@ -30,7 +30,7 @@ from base_rings import BaseRingTracker
 from local_rules import verify_generated_rules
 from create_match_kit import shared_uuid
 
-VERSION = '0.5.1-alpha'
+VERSION = '0.5.2-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
 HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth',
