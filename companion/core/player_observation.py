@@ -1,8 +1,9 @@
 """Fail-closed player observation projection from a research ActionProbe row.
 
 This module is deliberately independent of process-memory readers.  It is a
-field whitelist, not a visibility detector: discovered IDs are historical map
-knowledge, and current objects outside owned zones are never passed through.
+field whitelist, not a visibility detector. Own entities remain separately
+scoped; the optional known-zone component permits only its audited natural
+resource and unowned Wolf/Bear contract, not arbitrary outside-owned entities.
 The live collector must verify local-player identity before calling it.  A
 research_only label does not grant permission to expose a research field.
 """
@@ -22,6 +23,7 @@ try:
     from .growth_projection import (project_growth, economic_cache_not_ready,
                                     population_cap_bootstrap_unavailable)
     from .match_context_projection import project_match_context
+    from .known_zone_details import project_known_zone_details
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from operation_projection import project_operations
@@ -30,6 +32,7 @@ except ImportError:
     from growth_projection import (project_growth, economic_cache_not_ready,
                                    population_cap_bootstrap_unavailable)
     from match_context_projection import project_match_context
+    from known_zone_details import project_known_zone_details
 
 
 POLICY_VERSION = "player-observation.v1"
@@ -591,6 +594,8 @@ def project_player_observation(snapshot: Any, *, include_own_events: bool = Fals
         result['population_growth'] = project_growth(snapshot['population_growth'], snapshot)
     if 'match_context' in snapshot:
         result['match_context'] = project_match_context(snapshot['match_context'], snapshot)
+    if 'known_zone_details' in snapshot:
+        result['known_zone_details'] = project_known_zone_details(snapshot['known_zone_details'], snapshot)
     return result
 
 

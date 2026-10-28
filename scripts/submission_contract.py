@@ -328,6 +328,71 @@ RECORD_SCHEMAS['health.ndjson.gz']['properties']['component_diagnostics']['prope
     ('source_status','projection_status'))
 RECORD_SCHEMAS['actions.ndjson.gz']['properties']['labor_transitions']=arr(TRANSITION,10000)
 
+# Audited discovered natural details are separate from the own-entity arrays.
+# This frozen contract deliberately does not import candidate collector code.
+KNOWN_ZONE_SOURCE = 'native_discovered_natural_details_read_only'
+KNOWN_ZONE_SCOPE = 'local_discovered_natural_resources_and_unowned_wolf_bear'
+KNOWN_ZONE_HL = 'db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76'
+KNOWN_ZONE_CDB = '88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3'
+KNOWN_ZONE_KINDS = ['RuneStone','CircleStone','Fertility','Stones','IronDeposit','Shoal','Grove','DeerSpawner']
+KNOWN_ZONE_UNKNOWNS = ['unsupported_resource_kinds','unsupported_creature_kinds','effective_resource_yield',
+    'hostility_and_colonization_legality','respawn_schedule']
+KNOWN_ZONE_REASONS = [
+    'known_zone_context_unsupported','known_zone_component_read_failed',
+    'known_zone_resources_unavailable','known_zone_wildlife_unavailable','known_zone_attributes_unavailable',
+    'known_zone_hidden_resources_omitted','known_zone_hidden_wildlife_omitted',
+    'known_zone_visibility_unsupported','known_zone_grass_visibility_unsupported',
+    'known_zone_mineral_state_unavailable','known_zone_resource_read_race','known_zone_wildlife_read_race',
+    'known_zone_garrisoned_wildlife_unsupported','known_zone_optional_read_failed',
+    'known_zone_roots_changed','known_zone_resource_read_failed','known_zone_wildlife_read_failed',
+    'known_zone_natural_attributes_unavailable','known_zone_resource_state_missing',
+    'known_zone_resource_visibility_unsupported','known_zone_resource_type_unsupported',
+    'known_zone_wildlife_visibility_unsupported','known_zone_wildlife_type_unsupported',
+    'known_zone_shoal_enablement_unsupported']
+KNOWN_ZONE_DIAGNOSTIC_REASONS = ['known_zone_context_unsupported','known_zone_component_unavailable','invalid_known_zone_component']
+KNOWN_REFERENCE = obj({'semantics':{'const':'verified_default_configuration_not_effective_yield'},
+    'production_channels':arr({'enum':['Lore','Faith','Wheat','Stone','Iron','Fish','Wood','Meat']},2),
+    'fixed_assignment_slots':nullable({'type':'integer','minimum':0,'maximum':2}),
+    'local_multiplier_reference':arr(obj({'resource':{'enum':['Lore','Wood']},'multiplier':NONNEG,
+        'scope':{'const':'ordinary_viking'}},('resource','multiplier','scope')),1),
+    'deer_spawn_max':nullable({'type':'integer','minimum':1,'maximum':7}),
+    'deer_spawn_speed_config':nullable(NONNEG),
+    'depletion_model':{'enum':['finite_mineral','renewing_deer_source','production_opportunity']}})
+KNOWN_REFERENCE['required']=list(KNOWN_REFERENCE['properties'])
+KNOWN_DEPOSIT = obj({'natural_object_uid':ENTITY_UID,'remaining_contains_raw':nullable(NONNEG),
+    'next_extraction_progress_raw':nullable(NONNEG)},('natural_object_uid','remaining_contains_raw','next_extraction_progress_raw'))
+KNOWN_RESOURCE = obj({'kind':{'enum':KNOWN_ZONE_KINDS},
+    'object_count':{'type':'integer','minimum':1,'maximum':10000},'deposits':arr(KNOWN_DEPOSIT),
+    'remaining_total_raw':nullable(NONNEG),'modeled_ui_remaining_total':nullable(INT),
+    'reference_properties':KNOWN_REFERENCE})
+KNOWN_RESOURCE['required']=list(KNOWN_RESOURCE['properties'])
+KNOWN_DETAIL_ZONE = obj({'zone_id':ZONE_ID,
+    'resources_status':{'enum':['ok','partial','unavailable']},
+    'wildlife_status':{'enum':['ok','partial','unavailable']},
+    'natural_attributes_status':{'enum':['complete','unavailable']},
+    'tall_grass_present':nullable(BOOL),'hiding_grass_present':nullable(BOOL),
+    'resources':arr(KNOWN_RESOURCE,8),
+    'wildlife':arr(obj({'kind':{'enum':['Wolf','Bear']},'count':{'type':'integer','minimum':0,'maximum':10000}},('kind','count')),2),
+    'resource_reason_codes':arr({'enum':KNOWN_ZONE_REASONS},len(KNOWN_ZONE_REASONS)),
+    'wildlife_reason_codes':arr({'enum':KNOWN_ZONE_REASONS},len(KNOWN_ZONE_REASONS))})
+KNOWN_DETAIL_ZONE['required']=list(KNOWN_DETAIL_ZONE['properties'])
+KNOWN_ZONE_DETAILS = obj({**COMMON_COMPONENT,'source':{'const':KNOWN_ZONE_SOURCE},
+    'scope':{'enum':[KNOWN_ZONE_SCOPE,'no_known_zone_details']},
+    'status':{'enum':['partial','unsupported_context','unavailable','rejected']},
+    'hlboot_sha256':{'const':KNOWN_ZONE_HL},'data_cdb_sha256':{'const':KNOWN_ZONE_CDB},
+    'zones':arr(KNOWN_DETAIL_ZONE),
+    'reason_codes':arr({'enum':KNOWN_ZONE_REASONS+KNOWN_ZONE_DIAGNOSTIC_REASONS},len(KNOWN_ZONE_REASONS)+3),
+    'unknown_fields':arr({'enum':KNOWN_ZONE_UNKNOWNS+['known_zone_details']},6)},
+    ('schema_version','source','scope','status','zones','reason_codes','unknown_fields'))
+RECORD_SCHEMAS['player-observations.ndjson.gz']['properties']['known_zone_details']=KNOWN_ZONE_DETAILS
+RECORD_SCHEMAS['health.ndjson.gz']['properties'].update({
+    'known_zone_details_status':nullable({'enum':['partial','unsupported_context','unavailable','rejected']}),
+    'known_zone_details_unknown_fields':arr({'enum':KNOWN_ZONE_UNKNOWNS+['known_zone_details']},6)})
+RECORD_SCHEMAS['health.ndjson.gz']['properties']['component_diagnostics']['properties']['known_zone_details']=obj({
+    'source_status':TOKEN,'projection_status':TOKEN,'error_type':TOKEN,
+    'source_reason_codes':arr(TOKEN,100),'projection_reason_codes':arr(TOKEN,100),'read_guard_issues':arr(TOKEN,100)},
+    ('source_status','projection_status'))
+
 METADATA = obj({'consent_to_share':{'const':True}, 'data_source':{'enum':['own_human_game']},
     'mode':{'enum':['singleplayer','multiplayer','unknown']},'clan':nullable(TOKEN),'match_link':nullable(MATCH_LINK),
     'difficulty':nullable(TOKEN), 'map':obj({'name':nullable(TOKEN),'seed':nullable({'type':'integer'}),'size':nullable(TOKEN)},('name','seed','size')),

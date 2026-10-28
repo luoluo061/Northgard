@@ -28,6 +28,7 @@ from map_capture import capture_map
 from labor_capture import capture_labor
 from growth_capture import capture_growth
 from match_context import capture_match_context
+from known_zone_capture import capture_known_zone_details
 
 
 def optional_failure_reasons(component_name, error):
@@ -71,6 +72,22 @@ def capture_operation_component(h, me, state, *, known_zone_ids, owned_building_
                 'source': 'native_own_operation_state_read_only',
                 'reason_codes': ['own_operation_component_read_failed'],
                 'error_type': type(error).__name__, **identity}
+
+
+def capture_known_zone_component(h, me, state, *, known_zone_ids, identity, profile,
+                                 game_context):
+    """Keep optional known-natural failures separate from the economic frame."""
+    try:
+        return capture_known_zone_details(h, me, state, known_zone_ids=known_zone_ids,
+            identity=identity, profile=profile, game_context=game_context)
+    except (ValueError, OSError, KeyError, TypeError, struct.error, OverflowError, RuntimeError):
+        # Never propagate an exception string, pointer or machine path into
+        # the shareable diagnostic. Missing details are not an empty map.
+        return {'schema_version': 1, 'status': 'unavailable',
+            'source': 'native_discovered_natural_details_read_only',
+            'scope': 'no_known_zone_details', 'atomic': False, 'zones': [],
+            'reason_codes': ['known_zone_details_component_read_failed'],
+            'unknown_fields': ['known_zone_details'], **identity}
 
 
 class ActionProbe(Probe):
@@ -317,6 +334,9 @@ class ActionProbe(Probe):
             owned_building_pointers=owned_building_pointers,
             identity=identities, profile=self.profile, clan=base.get('clan'),
             game_context=context)
+        known_details = capture_known_zone_component(h, me, state,
+            known_zone_ids=base.get('discovered_zone_ids', []),
+            identity=identities, profile=self.profile, game_context=context)
         try:
             map_observation = capture_map(h, me, state,
                 known_zone_ids=base.get('discovered_zone_ids', []),
@@ -362,7 +382,7 @@ class ActionProbe(Probe):
         base.update({
             'schema_version': 2, 'session_key': session,
             'research_only': True,
-            'scope': 'local-player units and owned-zone buildings; complete native event log for post-match research only',
+            'scope': 'local-player entities; audited discovered natural details; complete native event log for post-match research only',
             'game_time_seconds': t1,
             'sample_span_game_seconds': t1 - t0,
             'sample_duration_wall_seconds': time.monotonic() - started,
@@ -373,6 +393,7 @@ class ActionProbe(Probe):
             'economy': economy,
             'operations': operations,
             'map_observation': map_observation,
+            'known_zone_details': known_details,
             **optional,
             'session_game_finished': h.field(state, 'gameFinished'),
             'local_player_game_over': h.field(me, 'gameOver'),

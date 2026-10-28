@@ -20,6 +20,17 @@ import zipfile
 VERSION = "0.5.1"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = (
+    'docs/OPERATIONS_ADVISOR_DESIGN.zh-CN.md',
+    'docs/KNOWN_ZONE_DETAILS.zh-CN.md',
+    'companion/core/known_zone_details.py',
+    'companion/tests/test_known_zone_details.py',
+    'research/telemetry/known_zone_capture.py',
+    'research/telemetry/test_known_zone_capture.py',
+    'research/telemetry/test_known_zone_integration.py',
+    'tests/test_known_zone_submission.py',
+    'tests/test_known_zone_collector.py',
+    'tests/test_known_zone_report.py',
+    'scripts/show_known_zones.py',
     'docs/MECHANICS_REFERENCE.zh-CN.md',
     'docs/POPULATION_ECONOMY.zh-CN.md',
     'docs/JOBS_REFERENCE.zh-CN.md',

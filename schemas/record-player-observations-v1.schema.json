@@ -1560,6 +1560,504 @@
     "in_winter": {
       "type": "boolean"
     },
+    "known_zone_details": {
+      "additionalProperties": false,
+      "properties": {
+        "atomic": {
+          "const": false
+        },
+        "capture_run_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "capture_segment_id": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "data_cdb_sha256": {
+          "const": "88d4c84b9622ce237533afc8674174aa9006d87a03258cd7e5fd671f930174e3"
+        },
+        "game_time_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "hlboot_sha256": {
+          "const": "db0459d251879698420f58f6819e0ab2f75a3cde6e65611f2ad723f3b4b7ef76"
+        },
+        "local_player_entity_uid": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reason_codes": {
+          "items": {
+            "enum": [
+              "known_zone_context_unsupported",
+              "known_zone_component_read_failed",
+              "known_zone_resources_unavailable",
+              "known_zone_wildlife_unavailable",
+              "known_zone_attributes_unavailable",
+              "known_zone_hidden_resources_omitted",
+              "known_zone_hidden_wildlife_omitted",
+              "known_zone_visibility_unsupported",
+              "known_zone_grass_visibility_unsupported",
+              "known_zone_mineral_state_unavailable",
+              "known_zone_resource_read_race",
+              "known_zone_wildlife_read_race",
+              "known_zone_garrisoned_wildlife_unsupported",
+              "known_zone_optional_read_failed",
+              "known_zone_roots_changed",
+              "known_zone_resource_read_failed",
+              "known_zone_wildlife_read_failed",
+              "known_zone_natural_attributes_unavailable",
+              "known_zone_resource_state_missing",
+              "known_zone_resource_visibility_unsupported",
+              "known_zone_resource_type_unsupported",
+              "known_zone_wildlife_visibility_unsupported",
+              "known_zone_wildlife_type_unsupported",
+              "known_zone_shoal_enablement_unsupported",
+              "known_zone_context_unsupported",
+              "known_zone_component_unavailable",
+              "invalid_known_zone_component"
+            ]
+          },
+          "maxItems": 27,
+          "type": "array"
+        },
+        "sample_span_game_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "scope": {
+          "enum": [
+            "local_discovered_natural_resources_and_unowned_wolf_bear",
+            "no_known_zone_details"
+          ]
+        },
+        "session_key": {
+          "maxLength": 24,
+          "pattern": "^[a-f0-9]{24}$",
+          "type": "string"
+        },
+        "source": {
+          "const": "native_discovered_natural_details_read_only"
+        },
+        "status": {
+          "enum": [
+            "partial",
+            "unsupported_context",
+            "unavailable",
+            "rejected"
+          ]
+        },
+        "time_after": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "time_before": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "number"
+        },
+        "unknown_fields": {
+          "items": {
+            "enum": [
+              "unsupported_resource_kinds",
+              "unsupported_creature_kinds",
+              "effective_resource_yield",
+              "hostility_and_colonization_legality",
+              "respawn_schedule",
+              "known_zone_details"
+            ]
+          },
+          "maxItems": 6,
+          "type": "array"
+        },
+        "zones": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "hiding_grass_present": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "natural_attributes_status": {
+                "enum": [
+                  "complete",
+                  "unavailable"
+                ]
+              },
+              "resource_reason_codes": {
+                "items": {
+                  "enum": [
+                    "known_zone_context_unsupported",
+                    "known_zone_component_read_failed",
+                    "known_zone_resources_unavailable",
+                    "known_zone_wildlife_unavailable",
+                    "known_zone_attributes_unavailable",
+                    "known_zone_hidden_resources_omitted",
+                    "known_zone_hidden_wildlife_omitted",
+                    "known_zone_visibility_unsupported",
+                    "known_zone_grass_visibility_unsupported",
+                    "known_zone_mineral_state_unavailable",
+                    "known_zone_resource_read_race",
+                    "known_zone_wildlife_read_race",
+                    "known_zone_garrisoned_wildlife_unsupported",
+                    "known_zone_optional_read_failed",
+                    "known_zone_roots_changed",
+                    "known_zone_resource_read_failed",
+                    "known_zone_wildlife_read_failed",
+                    "known_zone_natural_attributes_unavailable",
+                    "known_zone_resource_state_missing",
+                    "known_zone_resource_visibility_unsupported",
+                    "known_zone_resource_type_unsupported",
+                    "known_zone_wildlife_visibility_unsupported",
+                    "known_zone_wildlife_type_unsupported",
+                    "known_zone_shoal_enablement_unsupported"
+                  ]
+                },
+                "maxItems": 24,
+                "type": "array"
+              },
+              "resources": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "deposits": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "natural_object_uid": {
+                            "maximum": 9007199254740991,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "next_extraction_progress_raw": {
+                            "anyOf": [
+                              {
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "remaining_contains_raw": {
+                            "anyOf": [
+                              {
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "natural_object_uid",
+                          "remaining_contains_raw",
+                          "next_extraction_progress_raw"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 10000,
+                      "type": "array"
+                    },
+                    "kind": {
+                      "enum": [
+                        "RuneStone",
+                        "CircleStone",
+                        "Fertility",
+                        "Stones",
+                        "IronDeposit",
+                        "Shoal",
+                        "Grove",
+                        "DeerSpawner"
+                      ]
+                    },
+                    "modeled_ui_remaining_total": {
+                      "anyOf": [
+                        {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "object_count": {
+                      "maximum": 10000,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "reference_properties": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "deer_spawn_max": {
+                          "anyOf": [
+                            {
+                              "maximum": 7,
+                              "minimum": 1,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "deer_spawn_speed_config": {
+                          "anyOf": [
+                            {
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "depletion_model": {
+                          "enum": [
+                            "finite_mineral",
+                            "renewing_deer_source",
+                            "production_opportunity"
+                          ]
+                        },
+                        "fixed_assignment_slots": {
+                          "anyOf": [
+                            {
+                              "maximum": 2,
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "local_multiplier_reference": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "multiplier": {
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "resource": {
+                                "enum": [
+                                  "Lore",
+                                  "Wood"
+                                ]
+                              },
+                              "scope": {
+                                "const": "ordinary_viking"
+                              }
+                            },
+                            "required": [
+                              "resource",
+                              "multiplier",
+                              "scope"
+                            ],
+                            "type": "object"
+                          },
+                          "maxItems": 1,
+                          "type": "array"
+                        },
+                        "production_channels": {
+                          "items": {
+                            "enum": [
+                              "Lore",
+                              "Faith",
+                              "Wheat",
+                              "Stone",
+                              "Iron",
+                              "Fish",
+                              "Wood",
+                              "Meat"
+                            ]
+                          },
+                          "maxItems": 2,
+                          "type": "array"
+                        },
+                        "semantics": {
+                          "const": "verified_default_configuration_not_effective_yield"
+                        }
+                      },
+                      "required": [
+                        "semantics",
+                        "production_channels",
+                        "fixed_assignment_slots",
+                        "local_multiplier_reference",
+                        "deer_spawn_max",
+                        "deer_spawn_speed_config",
+                        "depletion_model"
+                      ],
+                      "type": "object"
+                    },
+                    "remaining_total_raw": {
+                      "anyOf": [
+                        {
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "object_count",
+                    "deposits",
+                    "remaining_total_raw",
+                    "modeled_ui_remaining_total",
+                    "reference_properties"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              "resources_status": {
+                "enum": [
+                  "ok",
+                  "partial",
+                  "unavailable"
+                ]
+              },
+              "tall_grass_present": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wildlife": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "count": {
+                      "maximum": 10000,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "kind": {
+                      "enum": [
+                        "Wolf",
+                        "Bear"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "count"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 2,
+                "type": "array"
+              },
+              "wildlife_reason_codes": {
+                "items": {
+                  "enum": [
+                    "known_zone_context_unsupported",
+                    "known_zone_component_read_failed",
+                    "known_zone_resources_unavailable",
+                    "known_zone_wildlife_unavailable",
+                    "known_zone_attributes_unavailable",
+                    "known_zone_hidden_resources_omitted",
+                    "known_zone_hidden_wildlife_omitted",
+                    "known_zone_visibility_unsupported",
+                    "known_zone_grass_visibility_unsupported",
+                    "known_zone_mineral_state_unavailable",
+                    "known_zone_resource_read_race",
+                    "known_zone_wildlife_read_race",
+                    "known_zone_garrisoned_wildlife_unsupported",
+                    "known_zone_optional_read_failed",
+                    "known_zone_roots_changed",
+                    "known_zone_resource_read_failed",
+                    "known_zone_wildlife_read_failed",
+                    "known_zone_natural_attributes_unavailable",
+                    "known_zone_resource_state_missing",
+                    "known_zone_resource_visibility_unsupported",
+                    "known_zone_resource_type_unsupported",
+                    "known_zone_wildlife_visibility_unsupported",
+                    "known_zone_wildlife_type_unsupported",
+                    "known_zone_shoal_enablement_unsupported"
+                  ]
+                },
+                "maxItems": 24,
+                "type": "array"
+              },
+              "wildlife_status": {
+                "enum": [
+                  "ok",
+                  "partial",
+                  "unavailable"
+                ]
+              },
+              "zone_id": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "zone_id",
+              "resources_status",
+              "wildlife_status",
+              "natural_attributes_status",
+              "tall_grass_present",
+              "hiding_grass_present",
+              "resources",
+              "wildlife",
+              "resource_reason_codes",
+              "wildlife_reason_codes"
+            ],
+            "type": "object"
+          },
+          "maxItems": 10000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "scope",
+        "status",
+        "zones",
+        "reason_codes",
+        "unknown_fields"
+      ],
+      "type": "object"
+    },
     "labor": {
       "additionalProperties": false,
       "properties": {

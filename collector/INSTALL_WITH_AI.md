@@ -6,4 +6,6 @@
 
 `setup_local.py` 与 `doctor.py` 只准备和检查本机环境。用户已授权且进入自己的对局后再采集；不要代操作游戏。先短测并报告各组件缺失，离线通过不等于实局稳定。所有氏族的本人职业可采，住房人口口径目前只核熊／乌鸦；逐人实产与完整加成仍有 null。多人不套用单人增长门槛或盛宴报价。
 
+普通单人FreeForAll新增`known_zone_details`可选组件，范围和验收步骤见[已知地块详情](../docs/KNOWN_ZONE_DETAILS.zh-CN.md)。它按已探索及已核可见规则采集白名单自然资源、石铁余量和限定狼熊，尚未完成新路径真实短段验收；3v3返回`unsupported_context`。不能把组件缺失/失败当成地块无资源，也不能扩为敌方经济读取。
+
 回传依 [DATA_CONTRIBUTION](../docs/DATA_CONTRIBUTION.md) 生成固定字段审阅包，保留 `experimental_multiplayer_unverified`；只有本人对这局及指定公开仓库的分享授权才执行 fork／PR。不要将原始 captures、旧分享 ZIP、游戏资产或研究原始流直接入库。已有授权按范围继续，不重复确认例行步骤。

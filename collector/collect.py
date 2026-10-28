@@ -34,7 +34,7 @@ VERSION = '0.5.1-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
 HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth',
-                     'match_context', 'base_neighborhood')
+                     'match_context', 'base_neighborhood', 'known_zone_details')
 _HEALTH_CODE = re.compile(r'[A-Za-z][A-Za-z0-9_.:-]{0,127}\Z')
 
 
@@ -123,6 +123,24 @@ def component_diagnostics(raw, projected):
             entry['error_type'] = code(source['error_type'])
         result[name] = entry
     return result
+
+
+def known_zone_details_summary(observation):
+    """Summarize this frame only; absent/unsupported data is never zero."""
+    component = observation.get('known_zone_details')
+    component = component if type(component) is dict else {}
+    status = component.get('status', 'missing')
+    if status not in ('ok', 'partial', 'missing', 'unavailable', 'unsupported_context', 'rejected'):
+        status = 'unavailable'
+    zones = component.get('zones')
+    observed_count = (len(zones) if status in ('ok', 'partial') and type(zones) is list
+                      else None)
+    when = component.get('game_time_seconds')
+    if type(when) not in (int, float) or not math.isfinite(when) or when < 0:
+        when = None
+    return {'status': status, 'observed_zone_count': observed_count,
+            'game_time_seconds': when,
+            'coverage': 'supported_subset_not_complete_known_map'}
 
 
 def transition_tail_records(status, transitions):
@@ -332,7 +350,8 @@ def main(argv=None):
                                 'Multiplayer capture is experimental; release-level short/full 3v3 validation has not run.',
                                 'Shared UUID and A/B seats are participant declarations, not verified cross-client identity.',
                                 'Allied effects, trades and shared-vision discovery provenance are not fully attributed.',
-                                'Base rings use discovered geometric adjacency only; incomplete rings do not establish absent tiles.']}
+                                'Base rings use discovered geometric adjacency only; incomplete rings do not establish absent tiles.',
+                                'Known-zone natural resources and unowned Wolf/Bear are a limited optional component; multiplayer and hidden/special branches remain unsupported or unknown.']}
     publications = LocalPublications()
     publications.write(output / 'manifest.json', manifest, required=True)
     publications.write(output / 'latest.json', {'status': 'waiting_for_game', 'captured_at': now()})
@@ -418,6 +437,7 @@ def main(argv=None):
                         'known_ring2_count': len(neighborhood['ring2_zone_ids']),
                         'known_unclassified_count': len(neighborhood['known_unclassified_zone_ids']),
                         'coverage': neighborhood['coverage']}
+                    manifest['last_known_zone_details'] = known_zone_details_summary(projected)
                     manifest['last_session_key'] = raw.get('session_key')
                     manifest['last_capture_run_id'] = raw.get('capture_run_id')
                     manifest['last_capture_segment_id'] = raw.get('capture_segment_id')
@@ -426,6 +446,7 @@ def main(argv=None):
                             ('map', projected.get('map_observation', {}).get('status', 'missing')),
                             ('base_neighborhood', projected['base_neighborhood']['status']),
                             ('match_context', projected.get('match_context', {}).get('status', 'missing')),
+                            ('known_zone_details', projected.get('known_zone_details', {}).get('status', 'missing')),
                             ('labor', projected.get('labor', {}).get('status', 'missing')),
                             ('population_growth', projected.get('population_growth', {}).get('status', 'missing')),
                             ('feast_quote', projected.get('operations', {}).get('feast_quote', {}).get('status', 'missing'))):
@@ -436,6 +457,8 @@ def main(argv=None):
                     if raw.get('session_game_finished'):
                         stop_reason = 'game_finished'
                 else:
+                    manifest['last_known_zone_details'] = known_zone_details_summary(
+                        {'known_zone_details': {'status': 'unavailable'}})
                     differ.feed({'status': status})
                     ledger.feed({'status': status})
                     situations.feed({'status': status})
@@ -452,6 +475,7 @@ def main(argv=None):
                           'map_status': projected.get('map_observation', {}).get('status'),
                           'base_neighborhood_status': projected.get('base_neighborhood', {}).get('status'),
                           'match_context_status': projected.get('match_context', {}).get('status'),
+                          'known_zone_details_status': projected.get('known_zone_details', {}).get('status'),
                           'native_mode_kind': projected.get('game_context', {}).get('mode_kind'),
                           'native_mode_variant': projected.get('game_context', {}).get('mode_variant_kind'),
                           'capture_validation_stage': mode_diagnostics(projected, declared)['capture_validation_stage'],
@@ -461,6 +485,7 @@ def main(argv=None):
                           'population_growth_status': projected.get('population_growth', {}).get('status'),
                           'labor_unknown_fields': projected.get('labor', {}).get('unknown_fields', []),
                           'growth_unknown_fields': projected.get('population_growth', {}).get('unknown_fields', []),
+                          'known_zone_details_unknown_fields': projected.get('known_zone_details', {}).get('unknown_fields', []),
                           'food_capacity_verified': projected.get('economy', {}).get('resources', {}).get('Food', {}).get('stock_cap_verified') is True,
                           'feast_quote_status': projected.get('operations', {}).get('feast_quote', {}).get('status'),
                           'observation_rejection_codes': projected.get('reason_codes', []),
@@ -478,6 +503,8 @@ def main(argv=None):
                     'game_not_running_or_multiple' if 'Expected one Northgard.exe' in message else
                     'process_read_denied' if isinstance(error, PermissionError) else
                     'collector_read_failure')
+                manifest['last_known_zone_details'] = known_zone_details_summary(
+                    {'known_zone_details': {'status': 'unavailable'}})
                 differ.feed({'status': status})
                 ledger.feed({'status': status})
                 situations.feed({'status': status})

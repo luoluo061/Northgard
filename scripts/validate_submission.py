@@ -14,6 +14,7 @@ import zipfile
 import zlib
 
 from submission_contract import (BASE_RING_UNKNOWNS,DATA_FILES,FILES,MANIFEST_SCHEMA,MATCH_CONTEXT,MAX_COMPRESSED,MAX_EXPANDED,
+    KNOWN_ZONE_SOURCE,KNOWN_ZONE_SCOPE,KNOWN_ZONE_HL,KNOWN_ZONE_CDB,KNOWN_ZONE_UNKNOWNS,KNOWN_ZONE_REASONS,
     MAX_RECORD,MAX_TOTAL_EXPANDED,RECORD_SCHEMAS,SUBMISSION_SCHEMA,VARIANT_LAYOUTS,SubmissionError,
     clock,digest,loads,mode_facts,observe_mode,resolve_mode,team_groups,validate)
 
@@ -133,6 +134,8 @@ def validate_observation_scope(row):
     for event in row.get('own_events',[]):
         if event.get('actor') != 'self' or ('zone_id' in event and event['zone_id'] not in known):
             raise SubmissionError('Native event outside own scope')
+    if 'known_zone_details' in row:
+        validate_known_zone_component(row['known_zone_details'],row)
     for component_name in ('economy','labor','population_growth','operations','map_observation','match_context'):
         component=row.get(component_name)
         if not component:
@@ -199,6 +202,101 @@ def validate_observation_scope(row):
                     raise SubmissionError('Cost record outside own building scope')
         elif component_name=='match_context':
             validate_match_context(component,row)
+
+
+def validate_known_zone_component(component,row):
+    """Independent semantics check; never imports the candidate map reader."""
+    def require(condition):
+        if not condition:
+            raise SubmissionError('Invalid discovered natural-details component')
+    diagnostic={'schema_version','status','source','scope','zones','reason_codes','unknown_fields'}
+    if component.get('status')!='partial':
+        expected={'unsupported_context':'known_zone_context_unsupported',
+                  'unavailable':'known_zone_component_unavailable','rejected':'invalid_known_zone_component'}
+        require(set(component)==diagnostic and component.get('source')==KNOWN_ZONE_SOURCE
+                and component.get('scope')=='no_known_zone_details' and component.get('zones')==[]
+                and component.get('unknown_fields')==['known_zone_details']
+                and component.get('status') in expected
+                and component.get('reason_codes')==[expected[component['status']]])
+        return
+    keys={'schema_version','status','source','scope','hlboot_sha256','data_cdb_sha256',
+          'local_player_entity_uid','session_key','capture_run_id','capture_segment_id',
+          'game_time_seconds','time_before','time_after','sample_span_game_seconds','atomic',
+          'zones','reason_codes','unknown_fields'}
+    require(set(component)==keys and component['source']==KNOWN_ZONE_SOURCE and component['scope']==KNOWN_ZONE_SCOPE
+            and component['hlboot_sha256']==KNOWN_ZONE_HL and component['data_cdb_sha256']==KNOWN_ZONE_CDB
+            and component['unknown_fields']==KNOWN_ZONE_UNKNOWNS and component['atomic'] is False
+            and all(component[key]==row.get(key) for key in
+                    ('local_player_entity_uid','session_key','capture_run_id','capture_segment_id')))
+    context=row.get('game_context',{})
+    require(context.get('mode_kind')=='Singleplayer' and context.get('mode_variant_kind')=='FreeForAll'
+            and context.get('game_type_kind')=='Standard'
+            and context.get('editor_present') is False and context.get('bifrost_data_present') is False)
+    import math
+    require(component['time_after']>=component['time_before']
+            and component['game_time_seconds']==component['time_after']
+            and math.isclose(component['time_after']-component['time_before'],component['sample_span_game_seconds'],abs_tol=1e-9)
+            and component['sample_span_game_seconds']<=5
+            and -0.025<=row['game_time_seconds']-component['time_after']<=5)
+    require(len(component['reason_codes'])==len(set(component['reason_codes']))
+            and set(component['reason_codes']).issubset(KNOWN_ZONE_REASONS))
+    known=set(row.get('discovered_zone_ids',[]))
+    require(len(component['zones'])==len(known)
+            and {zone['zone_id'] for zone in component['zones']}==known)
+    specs={
+        'RuneStone':(['Lore','Faith'],1,[],None,None,'production_opportunity'),
+        'CircleStone':(['Lore','Faith'],2,[('Lore',1.1)],None,None,'production_opportunity'),
+        'Fertility':(['Wheat'],0,[],None,None,'production_opportunity'),
+        'Stones':(['Stone'],None,[],None,None,'finite_mineral'),
+        'IronDeposit':(['Iron'],None,[],None,None,'finite_mineral'),
+        'Shoal':(['Fish'],0,[],None,None,'production_opportunity'),
+        'Grove':(['Wood'],0,[('Wood',1.1)],None,None,'production_opportunity'),
+        'DeerSpawner':(['Meat'],0,[],7,10,'renewing_deer_source')}
+    seen_deposits=set()
+    own_buildings={b['uid']:b for b in row.get('buildings',[])}
+    own_unit_ids={u['uid'] for u in row.get('units',[])}
+    for zone in component['zones']:
+        for field in ('resource_reason_codes','wildlife_reason_codes'):
+            require(len(zone[field])==len(set(zone[field])))
+        if zone['natural_attributes_status']=='complete':
+            require(type(zone['tall_grass_present']) is bool and type(zone['hiding_grass_present']) is bool)
+        else:
+            require(zone['tall_grass_present'] is None and zone['hiding_grass_present'] is None)
+        if zone['wildlife_status']=='ok':
+            require(zone['natural_attributes_status']=='complete'
+                    and zone['tall_grass_present'] is False and zone['hiding_grass_present'] is False)
+        require(zone['resources_status']!='unavailable' or zone['resources']==[])
+        require(zone['wildlife_status']!='unavailable' or zone['wildlife']==[])
+        require(len({r['kind'] for r in zone['resources']})==len(zone['resources'])
+                and len({c['kind'] for c in zone['wildlife']})==len(zone['wildlife']))
+        for resource in zone['resources']:
+            kind=resource['kind'];channels,slots,multipliers,deer_max,deer_speed,depletion=specs[kind]
+            reference={'semantics':'verified_default_configuration_not_effective_yield',
+                'production_channels':channels,'fixed_assignment_slots':slots,
+                'local_multiplier_reference':[{'resource':r,'multiplier':v,'scope':'ordinary_viking'} for r,v in multipliers],
+                'deer_spawn_max':deer_max,'deer_spawn_speed_config':deer_speed,'depletion_model':depletion}
+            require(resource['reference_properties']==reference)
+            deposits=resource['deposits']
+            if kind not in ('Stones','IronDeposit'):
+                require(deposits==[] and resource['remaining_total_raw'] is None
+                        and resource['modeled_ui_remaining_total'] is None)
+                continue
+            require(len(deposits)==resource['object_count'])
+            for deposit in deposits:
+                uid=deposit['natural_object_uid']
+                require(uid not in seen_deposits and uid not in own_unit_ids)
+                seen_deposits.add(uid)
+                if uid in own_buildings:
+                    require(own_buildings[uid]['kind']==kind and own_buildings[uid]['zone_id']==zone['zone_id'])
+            values=[d['remaining_contains_raw'] for d in deposits]
+            if zone['resources_status']=='ok' and all(value is not None for value in values):
+                total=sum(values)
+                require(resource['remaining_total_raw']==total and type(resource['remaining_total_raw']) in (int,float)
+                        and resource['modeled_ui_remaining_total']==math.ceil(total))
+            else:
+                require(resource['remaining_total_raw'] is None and resource['modeled_ui_remaining_total'] is None)
+        if zone['wildlife_status']!='ok':
+            require(all(creature['count']>0 for creature in zone['wildlife']))
 
 
 def _base_empty(reason):
@@ -502,6 +600,11 @@ def validate_submission(path):
                                     for key,expected_hash in submission['game_fingerprint'].items():
                                         if expected_hash is not None and match_context[key]!=expected_hash:
                                             raise SubmissionError('Native match context fingerprint differs from submission')
+                                known_details=row.get('known_zone_details',{})
+                                if known_details.get('status')=='partial':
+                                    for key,expected_hash in submission['game_fingerprint'].items():
+                                        if expected_hash is not None and known_details[key]!=expected_hash:
+                                            raise SubmissionError('Known-zone details fingerprint differs from submission')
                                 if when is None:
                                     raise SubmissionError('Missing player clock')
                                 identity_key=tuple(row.get(key) for key in ('session_key','capture_run_id','capture_segment_id'))

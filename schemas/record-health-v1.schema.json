@@ -145,6 +145,58 @@
           ],
           "type": "object"
         },
+        "known_zone_details": {
+          "additionalProperties": false,
+          "properties": {
+            "error_type": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "projection_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "projection_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "read_guard_issues": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_reason_codes": {
+              "items": {
+                "maxLength": 128,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            "source_status": {
+              "maxLength": 128,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_status",
+            "projection_status"
+          ],
+          "type": "object"
+        },
         "labor": {
           "additionalProperties": false,
           "properties": {
@@ -512,6 +564,35 @@
           "type": "null"
         }
       ]
+    },
+    "known_zone_details_status": {
+      "anyOf": [
+        {
+          "enum": [
+            "partial",
+            "unsupported_context",
+            "unavailable",
+            "rejected"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "known_zone_details_unknown_fields": {
+      "items": {
+        "enum": [
+          "unsupported_resource_kinds",
+          "unsupported_creature_kinds",
+          "effective_resource_yield",
+          "hostility_and_colonization_legality",
+          "respawn_schedule",
+          "known_zone_details"
+        ]
+      },
+      "maxItems": 6,
+      "type": "array"
     },
     "labor_status": {
       "anyOf": [
