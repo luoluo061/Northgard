@@ -12,6 +12,8 @@
 
 从采集走向玩家指导的下一步见[运营助手设计草案](docs/OPERATIONS_ADVISOR_DESIGN.zh-CN.md)：联合视野、人口、殖民、建筑与能力期限，输出带预算、替代方案和信息缺口的行动卡。该设计尚未接入局内推荐，现有预算比较器不等于完整规划器。
 
+[实时辅助参照研究](docs/REALTIME_ASSISTANT_REFERENCES.zh-CN.md)核查HDT/Firestone、WeakAuras、Spawning Tool、SC2 Planner、Bob's Buddy与CaptureAge等实际文档和选定源码，区分状态、规则提醒、流程、统计、模拟与复盘，明确本地即时计算和异步解释的实施顺序；不是这些功能已在本项目落地的声明。
+
 新增范围与差距见[项目路线](docs/PROJECT_ROADMAP.zh-CN.md)和[地块对象扩展规格](docs/MAP_OBJECT_CAPTURE_SPEC.zh-CN.md)：包含中立生物/巢穴、遗迹宝藏、声望来源、中立势力和特殊地块。先从本机建立完整定义目录，再逐类实现可知状态、任务、奖励与资格；静态目录不等于本局已采到，也不以条目数宣称运行时完成度。
 
 本项目通过只读本地游戏进程获取状态，无需截图或 OCR。当前为 **0.5.2-alpha 准备版**，包含**基地已探索一环／二环及本方用工、建筑的关联**，并保留 **3v3 本人视角实验采集与多人对局关联**。环层已有单人短段读取检查；完整窗口和真实3v3尚未验收。本版修复Windows快照文件被读锁时导致采集退出的问题。具体状态见 [验证记录](docs/VALIDATION_STATUS.md)。
