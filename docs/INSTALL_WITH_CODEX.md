@@ -1,6 +1,6 @@
 # 给协助安装、试采和贡献数据的 Codex
 
-当前为 **0.5.2-alpha 准备版**，面向普通单人验证和 **3v3 本人视角实验采集**。先读根目录 [AGENTS.md](../AGENTS.md)、[README.md](../README.md)、[游戏数据指南](GAME_DATA_GUIDE.zh-CN.md) 和 [3v3 说明](MULTIPLAYER_3V3.md)。没有后台上传服务，不需要修改或控制游戏。
+当前为 **0.5.3-alpha 准备版**，优先稳定记录与[完整离线复盘](RECORDING_AND_REVIEW.zh-CN.md)，保留普通单人验证和 **3v3 本人视角实验采集**。先读根目录 [AGENTS.md](../AGENTS.md)、[README.md](../README.md)、[游戏数据指南](GAME_DATA_GUIDE.zh-CN.md) 和 [3v3 说明](MULTIPLAYER_3V3.md)。没有后台上传服务，不需要修改或控制游戏。
 
 ## 1. 安装准备
 

@@ -30,7 +30,7 @@ from base_rings import BaseRingTracker
 from local_rules import verify_generated_rules
 from create_match_kit import shared_uuid
 
-VERSION = '0.5.2-alpha'
+VERSION = '0.5.3-alpha'
 SHARE_FILES = ('player-observations.ndjson', 'economic-snapshots.ndjson',
                'actions.ndjson', 'health.ndjson', 'manifest.json', 'latest.json')
 HEALTH_COMPONENTS = ('economy', 'operations', 'map_observation', 'labor', 'population_growth',
@@ -206,6 +206,40 @@ def reconcile_file(path):
                 if line.strip():
                     yield json.loads(line)
     return summarize_reconciliation(reconcile_stream(rows()))
+
+
+def finalize_manifest(output, manifest, publications, *, stop_reason, counts, sequence):
+    """Persist the recording boundary before optional offline reconciliation."""
+    manifest.update(recording_state='stopped', stopped_at=now(), stop_reason=stop_reason,
+                    status_counts=dict(counts), records_attempted=sequence)
+    manifest.pop('economic_reconciliation', None)
+    processing = {'status': 'pending'}
+    manifest.setdefault('postprocessing', {})['economic_reconciliation'] = processing
+    manifest['local_publication_deferred_counts'] = dict(publications.deferred_counts)
+    publications.write(output / 'manifest.json', manifest, required=True)
+
+    try:
+        reconciliation = reconcile_file(output / 'economic-snapshots.ndjson')
+    except (OSError, ValueError, TypeError, LookupError, ArithmeticError,
+            RuntimeError, AttributeError, struct.error) as error:
+        # Only stable codes and exception types leave this process. Exception
+        # text can contain local paths or fragments of the malformed record.
+        processing.update(status='failed', reason_code='economic_reconciliation_processing_error',
+                          error_type=type(error).__name__)
+        if isinstance(error, json.JSONDecodeError):
+            processing['reason_code'] = 'capture_json_parse_error'
+        elif isinstance(error, UnicodeError):
+            processing['reason_code'] = 'capture_text_decode_error'
+        elif isinstance(error, OSError):
+            processing.update(status='unavailable', reason_code='capture_io_error')
+    else:
+        manifest['economic_reconciliation'] = reconciliation
+        processing['status'] = 'completed'
+
+    manifest['local_publication_deferred_counts'] = dict(publications.deferred_counts)
+    # Failure to publish the outcome remains an explicit fatal local error;
+    # the already-persisted stopped/pending boundary is still recoverable.
+    publications.write(output / 'manifest.json', manifest, required=True)
 
 
 class ProbeConnection:
@@ -541,13 +575,13 @@ def main(argv=None):
         if private:
             private.close()
         connection.close()
-        manifest.update(recording_state='stopped', stopped_at=now(), stop_reason=stop_reason,
-                        status_counts=dict(counts), records_attempted=sequence)
-        manifest['economic_reconciliation'] = reconcile_file(output / 'economic-snapshots.ndjson')
-        manifest['local_publication_deferred_counts'] = dict(publications.deferred_counts)
-        publications.write(output / 'manifest.json', manifest, required=True)
+        finalize_manifest(output, manifest, publications, stop_reason=stop_reason,
+                          counts=counts, sequence=sequence)
     print(json.dumps({'status': 'stopped', 'stop_reason': stop_reason,
-                      'status_counts': dict(counts), 'reconciliation': manifest['economic_reconciliation']}, ensure_ascii=False), flush=True)
+                      'status_counts': dict(counts),
+                      'postprocessing': manifest['postprocessing'],
+                      **({'reconciliation': manifest['economic_reconciliation']}
+                         if 'economic_reconciliation' in manifest else {})}, ensure_ascii=False), flush=True)
 
 
 if __name__ == '__main__':
